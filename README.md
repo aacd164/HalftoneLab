@@ -1,5 +1,7 @@
 HalftoneLab
 
+https://aacd164.github.io/HalftoneLab/
+
 HalftoneLab is a browser-based image tool that converts uploaded images into print-inspired halftone graphics. It recreates images using dot screens, line screens, bitmap effects, and CMYK-style process colour patterns, with controls for paper texture, ink spread, misregistration, and rough printed edges.
 
 The project is built as a single-page web app using HTML, CSS, JavaScript, and the Canvas API. All image processing happens locally in the browser, so uploaded images are not sent to a server.
@@ -37,26 +39,3 @@ Canvas API
 Browser File API
 
 No external libraries or frameworks are required.
-
-Usage
-
-Open the app in a modern browser, upload an image, adjust the controls, and export the result as a PNG.
-
-Recommended browsers:
-
-Chrome
-Edge
-Safari
-Firefox
-Local Development
-
-Clone the repository and open index.html in your browser.
-
-git clone https://github.com/YOUR-USERNAME/HalftoneLab.git
-cd HalftoneLab
-
-Then open:
-
-index.html
-
-No build step is required.
