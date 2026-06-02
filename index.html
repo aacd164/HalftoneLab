@@ -138,6 +138,20 @@
       display: grid;
       grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
       min-height: 0;
+      transition: grid-template-columns 0.22s ease;
+    }
+
+    .workspace.controls-hidden {
+      grid-template-columns: 0 minmax(0, 1fr);
+    }
+
+    .workspace.controls-hidden .sidebar {
+      padding-left: 0;
+      padding-right: 0;
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+      border-right: 0;
     }
 
     .sidebar {
@@ -145,6 +159,7 @@
       background: rgba(245, 245, 247, 0.82);
       padding: 18px;
       overflow: auto;
+      transition: padding 0.22s ease, opacity 0.18s ease, border-color 0.18s ease;
     }
 
     .main {
@@ -177,6 +192,33 @@
       text-transform: uppercase;
       letter-spacing: 0.055em;
       font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      user-select: none;
+    }
+
+    .section-title::after {
+      content: "⌄";
+      font-size: 0.9rem;
+      line-height: 1;
+      color: var(--tertiary);
+      transform: translateY(-1px);
+      transition: transform 0.16s ease;
+    }
+
+    .section.collapsed .section-title {
+      border-bottom: 0;
+    }
+
+    .section.collapsed .section-title::after {
+      transform: rotate(-90deg) translateX(1px);
+    }
+
+    .section.collapsed .control-list {
+      display: none;
     }
 
     .control-list {
@@ -415,7 +457,7 @@
     }
 
     .stage-card {
-      min-height: 0;
+      min-height: clamp(420px, 72vh, 980px);
       display: grid;
       place-items: center;
       border-radius: var(--radius-xl);
@@ -436,8 +478,9 @@
     .stage {
       position: relative;
       width: 100%;
+      height: 100%;
+      max-width: 100%;
       max-height: 100%;
-      aspect-ratio: 16 / 10;
       display: grid;
       place-items: center;
       overflow: hidden;
@@ -471,6 +514,41 @@
 
     .overlay-message.hidden {
       display: none;
+    }
+
+    .split-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      border-left: 2px solid rgba(255, 255, 255, 0.92);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28);
+      transform: translateX(-1px);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .split-handle.hidden {
+      display: none;
+    }
+
+    .split-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: 1px solid var(--border-strong);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
     }
 
     .status-bar {
@@ -530,6 +608,10 @@
         grid-template-columns: 1fr;
       }
 
+      .workspace.controls-hidden {
+        grid-template-columns: 1fr;
+      }
+
       .sidebar {
         border-right: none;
         border-bottom: 1px solid var(--border);
@@ -541,6 +623,10 @@
 
       .section {
         margin-bottom: 0;
+      }
+
+      .workspace.controls-hidden .sidebar {
+        display: none;
       }
     }
 
@@ -582,6 +668,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
@@ -601,7 +688,9 @@
 
       <div class="toolbar-actions">
         <label class="upload-btn" for="imageUpload">Choose Image</label>
+        <button id="toggleControlsBtn">Hide Controls</button>
         <button id="beforeAfterBtn" disabled>Show Original</button>
+        <button id="splitCompareBtn" disabled>Enable Split View</button>
         <button id="randomizeBtn">Randomize</button>
         <button id="exportBtn" class="primary-btn" disabled>Export PNG</button>
       </div>
@@ -729,7 +818,7 @@
 
             <div class="control full">
               <div class="range-head">
-                <label for="spotThreshold">Spot Threshold</label>
+                <label for="spotThreshold">Spot Match</label>
                 <span class="value-label" id="spotThresholdValue">110</span>
               </div>
               <input id="spotThreshold" type="range" min="0" max="255" value="110" />
@@ -860,80 +949,6 @@
         </section>
 
         <section class="section">
-          <div class="section-title">Poster Text Overlay</div>
-          <div class="control-list">
-            <div class="control inline-checks">
-              <div class="label">Overlay</div>
-              <div class="check-grid check-grid-spot">
-                <label class="check-pill"><input id="posterEnabled" type="checkbox" /> Enable Text</label>
-                <label class="check-pill"><input id="posterCaps" type="checkbox" checked /> Uppercase</label>
-              </div>
-            </div>
-
-            <div class="control full">
-              <label for="posterHeadline">Headline</label>
-              <textarea id="posterHeadline" placeholder="Add a big headline">HALFTONE LAB</textarea>
-            </div>
-
-            <div class="control full">
-              <label for="posterSubhead">Subhead</label>
-              <input id="posterSubhead" type="text" placeholder="Subhead" value="CMYK / ROSETTE / SPOT COLOUR" />
-            </div>
-
-            <div class="control full">
-              <label for="posterFooter">Footer</label>
-              <input id="posterFooter" type="text" placeholder="Footer" value="PRINT STUDY — AARON DEY" />
-            </div>
-
-            <div class="control">
-              <label for="posterColor">Text Colour</label>
-              <input id="posterColor" type="color" value="#111111" />
-            </div>
-
-            <div class="control">
-              <label for="posterAlign">Align</label>
-              <select id="posterAlign">
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
-              </select>
-            </div>
-
-            <div class="control full">
-              <div class="range-head">
-                <label for="headlineSize">Headline Size</label>
-                <span class="value-label"><span id="headlineSizeValue">110</span></span>
-              </div>
-              <input id="headlineSize" type="range" min="36" max="240" value="110" />
-            </div>
-
-            <div class="control full">
-              <div class="range-head">
-                <label for="subheadSize">Subhead Size</label>
-                <span class="value-label"><span id="subheadSizeValue">24</span></span>
-              </div>
-              <input id="subheadSize" type="range" min="12" max="80" value="24" />
-            </div>
-
-            <div class="control full">
-              <div class="range-head">
-                <label for="footerSize">Footer Size</label>
-                <span class="value-label"><span id="footerSizeValue">18</span></span>
-              </div>
-              <input id="footerSize" type="range" min="10" max="52" value="18" />
-            </div>
-
-            <div class="control full">
-              <div class="range-head">
-                <label for="posterMargin">Margin</label>
-                <span class="value-label"><span id="posterMarginValue">56</span> px</span>
-              </div>
-              <input id="posterMargin" type="range" min="16" max="180" value="56" />
-            </div>
-          </div>
-        </section>
-
-        <section class="section">
           <div class="section-title">Output</div>
           <div class="control-list">
             <div class="control">
@@ -959,18 +974,21 @@
         <div class="preview-header">
           <div class="preview-title">
             <strong>Preview</strong>
-            <span>CMYK mode now supports channel visibility, spot colour, paper stock, rosette screens, and poster text overlay.</span>
+            <span>CMYK mode now supports channel visibility, spot colour matching, paper stock, and rosette screens.</span>
           </div>
           <div class="preview-status">
             <span class="chip"><span class="chip-dot"></span>Local render</span>
             <span class="chip">CMYK focus</span>
-            <span class="chip">Poster overlay</span>
+            <span class="chip">Adobe-ready PNG</span>
           </div>
         </div>
 
         <section class="stage-card">
           <div class="stage" id="stage">
             <canvas id="canvas"></canvas>
+            <div id="splitHandle" class="split-handle hidden" aria-hidden="true">
+              <div class="split-knob">↔</div>
+            </div>
             <div class="overlay-message" id="overlayMessage">Drop image here</div>
           </div>
         </section>
@@ -995,7 +1013,7 @@
         </section>
 
         <p class="note">
-          This version is focused on CMYK: traditional rosette screens, channel toggles, spot colour, stock-driven paper simulation, and poster typography on top of the image.
+          This version is focused on CMYK: traditional rosette screens, channel toggles, spot colour matching, improved dot gain, richer overprint behaviour, and stock-driven paper simulation for Adobe workflows.
         </p>
       </main>
     </section>
@@ -1003,7 +1021,9 @@
 
   <script>
     const imageUpload = document.getElementById("imageUpload");
+    const toggleControlsBtn = document.getElementById("toggleControlsBtn");
     const beforeAfterBtn = document.getElementById("beforeAfterBtn");
+    const splitCompareBtn = document.getElementById("splitCompareBtn");
     const randomizeBtn = document.getElementById("randomizeBtn");
     const exportBtn = document.getElementById("exportBtn");
 
@@ -1043,21 +1063,11 @@
     const offsetX = document.getElementById("offsetX");
     const offsetY = document.getElementById("offsetY");
 
-    const posterEnabled = document.getElementById("posterEnabled");
-    const posterCaps = document.getElementById("posterCaps");
-    const posterHeadline = document.getElementById("posterHeadline");
-    const posterSubhead = document.getElementById("posterSubhead");
-    const posterFooter = document.getElementById("posterFooter");
-    const posterColor = document.getElementById("posterColor");
-    const posterAlign = document.getElementById("posterAlign");
-    const headlineSize = document.getElementById("headlineSize");
-    const subheadSize = document.getElementById("subheadSize");
-    const footerSize = document.getElementById("footerSize");
-    const posterMargin = document.getElementById("posterMargin");
-
     const outputSize = document.getElementById("outputSize");
     const resetBtn = document.getElementById("resetBtn");
+    const splitHandle = document.getElementById("splitHandle");
     const stage = document.getElementById("stage");
+    const stageCard = document.querySelector(".stage-card");
     const canvas = document.getElementById("canvas");
     const overlayMessage = document.getElementById("overlayMessage");
 
@@ -1081,14 +1091,13 @@
     const offsetYValue = document.getElementById("offsetYValue");
     const spotThresholdValue = document.getElementById("spotThresholdValue");
     const spotOpacityValue = document.getElementById("spotOpacityValue");
-    const headlineSizeValue = document.getElementById("headlineSizeValue");
-    const subheadSizeValue = document.getElementById("subheadSizeValue");
-    const footerSizeValue = document.getElementById("footerSizeValue");
-    const posterMarginValue = document.getElementById("posterMarginValue");
 
     const ctx = canvas.getContext("2d");
     const sourceCanvas = document.createElement("canvas");
     const sourceCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
+
+    const workspace = document.querySelector(".workspace");
+    const sidebarSections = Array.from(document.querySelectorAll(".sidebar .section"));
 
     const image = new Image();
 
@@ -1097,6 +1106,10 @@
     let previewWidth = 0;
     let previewHeight = 0;
     let showingOriginal = false;
+    let splitCompareEnabled = false;
+    let splitPositionPercent = 50;
+    let isDraggingSplit = false;
+    let controlsHidden = false;
 
     const presets = {
       newsprint: {
@@ -1219,15 +1232,15 @@
         toneTwo: "#ff2d55",
         toneThree: "#111111",
         spacing: 6,
-        dotScale: 82,
+        dotScale: 86,
         angle: 15,
         threshold: 128,
-        roughness: 10,
-        inkSpread: 6,
+        roughness: 8,
+        inkSpread: 8,
         misregister: 1,
-        grain: 4,
-        contrast: 108,
-        brightness: 104,
+        grain: 5,
+        contrast: 112,
+        brightness: 103,
         showSpot: false,
         spotColor: "#ff5f00"
       }
@@ -1283,13 +1296,11 @@
       offsetYValue.textContent = offsetY.value;
       spotThresholdValue.textContent = spotThreshold.value;
       spotOpacityValue.textContent = spotOpacity.value;
-      headlineSizeValue.textContent = headlineSize.value;
-      subheadSizeValue.textContent = subheadSize.value;
-      footerSizeValue.textContent = footerSize.value;
-      posterMarginValue.textContent = posterMargin.value;
-
       modeInfo.textContent = mode.options[mode.selectedIndex].text;
       beforeAfterBtn.textContent = showingOriginal ? "Show Effect" : "Show Original";
+      splitCompareBtn.textContent = splitCompareEnabled ? "Disable Split View" : "Enable Split View";
+      splitCompareBtn.disabled = !image.naturalWidth;
+      beforeAfterBtn.disabled = !image.naturalWidth || splitCompareEnabled;
 
       const activeChannels = [
         showC.checked ? "C" : null,
@@ -1300,6 +1311,10 @@
       ].filter(Boolean).join(" / ") || "No channels";
 
       cmykInfo.textContent = `${cmykScreen.value === "rosette" ? "Rosette" : "Expressive"} / ${activeChannels}`;
+
+      splitHandle.classList.toggle("hidden", !splitCompareEnabled || !image.naturalWidth);
+      splitHandle.style.left = `${splitPositionPercent}%`;
+      stage.style.cursor = splitCompareEnabled && image.naturalWidth ? "ew-resize" : "default";
     }
 
     function markCustom() {
@@ -1317,12 +1332,43 @@
       return { width: previewWidth, height: previewHeight };
     }
 
-    function setStageAspect() {
-      if (!image.naturalWidth || outputSize.value !== "preview") return;
-      stage.style.aspectRatio = `${image.naturalWidth} / ${image.naturalHeight}`;
+    function fitStageToScreen() {
+      if (!stageCard) return;
+
+      const cardStyles = getComputedStyle(stageCard);
+      const paddingX = parseFloat(cardStyles.paddingLeft) + parseFloat(cardStyles.paddingRight);
+      const paddingY = parseFloat(cardStyles.paddingTop) + parseFloat(cardStyles.paddingBottom);
+
+      const availableWidth = Math.max(320, stageCard.clientWidth - paddingX);
+      const availableHeight = Math.max(260, stageCard.clientHeight - paddingY);
+
+      if (!image.naturalWidth || !image.naturalHeight || outputSize.value !== "preview") {
+        stage.style.width = `${availableWidth}px`;
+        stage.style.height = `${availableHeight}px`;
+        return;
+      }
+
+      const imageRatio = image.naturalWidth / image.naturalHeight;
+      const availableRatio = availableWidth / availableHeight;
+
+      let width = availableWidth;
+      let height = availableHeight;
+
+      if (imageRatio > availableRatio) {
+        width = availableWidth;
+        height = width / imageRatio;
+      } else {
+        height = availableHeight;
+        width = height * imageRatio;
+      }
+
+      stage.style.width = `${Math.max(220, width)}px`;
+      stage.style.height = `${Math.max(220, height)}px`;
     }
 
     function resizeCanvas() {
+      fitStageToScreen();
+
       const rect = stage.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
 
@@ -1378,8 +1424,10 @@
       };
     }
 
-    function drawOriginal(width, height) {
-      ctx.clearRect(0, 0, width, height);
+    function drawOriginal(width, height, clearFirst = true) {
+      if (clearFirst) {
+        ctx.clearRect(0, 0, width, height);
+      }
       ctx.fillStyle = paperColor.value;
       ctx.fillRect(0, 0, width, height);
 
@@ -1449,18 +1497,254 @@
         return { c: 0, m: 0, y: 0, k: 1 };
       }
 
-      return {
-        c: (1 - rr - k) / (1 - k),
-        m: (1 - gg - k) / (1 - k),
-        y: (1 - bb - k) / (1 - k),
-        k
-      };
+      let c = (1 - rr - k) / (1 - k);
+      let m = (1 - gg - k) / (1 - k);
+      let y = (1 - bb - k) / (1 - k);
+
+      const ucr = k * 0.72;
+      c = Math.max(0, c - ucr * 0.88);
+      m = Math.max(0, m - ucr * 0.88);
+      y = Math.max(0, y - ucr * 0.56);
+
+      const maxInk = 2.7;
+      const colorInk = c + m + y;
+      const remaining = Math.max(0, maxInk - k);
+
+      if (colorInk > remaining && colorInk > 0) {
+        const scale = remaining / colorInk;
+        c *= scale;
+        m *= scale;
+        y *= scale;
+      }
+
+      return { c, m, y, k };
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255;
+      g /= 255;
+      b /= 255;
+
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0;
+      let s = 0;
+      const l = (max + min) / 2;
+      const d = max - min;
+
+      if (d !== 0) {
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+        if (max === r) {
+          h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+        } else if (max === g) {
+          h = ((b - r) / d + 2) * 60;
+        } else {
+          h = ((r - g) / d + 4) * 60;
+        }
+      }
+
+      return { h, s, l };
+    }
+
+    function hueDistance(a, b) {
+      const d = Math.abs(a - b) % 360;
+      return Math.min(d, 360 - d);
+    }
+
+    function spotSimilarity(pixelRgb, targetRgb) {
+      const target = rgbToHsl(targetRgb.r, targetRgb.g, targetRgb.b);
+      const pixel = rgbToHsl(pixelRgb.r, pixelRgb.g, pixelRgb.b);
+
+      const tolerance = 0.06 + (Number(spotThreshold.value) / 255) * 0.72;
+
+      if (target.s < 0.08) {
+        const dr = (pixelRgb.r - targetRgb.r) / 255;
+        const dg = (pixelRgb.g - targetRgb.g) / 255;
+        const db = (pixelRgb.b - targetRgb.b) / 255;
+        const distance = Math.sqrt(dr * dr + dg * dg + db * db) / Math.sqrt(3);
+        return clamp(1 - distance / tolerance, 0, 1);
+      }
+
+      const hueScore = hueDistance(pixel.h, target.h) / 180;
+      const satScore = Math.abs(pixel.s - target.s);
+      const lightScore = Math.abs(pixel.l - target.l);
+
+      const weightedDistance =
+        hueScore * 0.68 +
+        satScore * 0.20 +
+        lightScore * 0.12;
+
+      return clamp(1 - weightedDistance / tolerance, 0, 1);
     }
 
     function clearCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = paperColor.value;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function getChannelProfile(channel) {
+      const rosette = cmykScreen.value === "rosette";
+
+      const profiles = {
+        c: {
+          alpha: 0.76,
+          dotGain: rosette ? 1.08 : 1.05,
+          slurX: rosette ? 1.08 : 1.06,
+          slurY: rosette ? 0.95 : 0.97,
+          wobble: 0.22,
+          edgeDarken: 0.08
+        },
+        m: {
+          alpha: 0.74,
+          dotGain: rosette ? 1.06 : 1.04,
+          slurX: rosette ? 1.06 : 1.04,
+          slurY: rosette ? 0.96 : 0.98,
+          wobble: 0.20,
+          edgeDarken: 0.07
+        },
+        y: {
+          alpha: 0.82,
+          dotGain: rosette ? 1.13 : 1.10,
+          slurX: rosette ? 1.03 : 1.02,
+          slurY: rosette ? 0.99 : 1.0,
+          wobble: 0.18,
+          edgeDarken: 0.03
+        },
+        k: {
+          alpha: 0.92,
+          dotGain: rosette ? 1.04 : 1.02,
+          slurX: rosette ? 1.04 : 1.02,
+          slurY: rosette ? 0.96 : 0.98,
+          wobble: 0.16,
+          edgeDarken: 0.11
+        },
+        spot: {
+          alpha: Number(spotOpacity.value) / 100,
+          dotGain: 1.06,
+          slurX: 1.04,
+          slurY: 0.97,
+          wobble: 0.16,
+          edgeDarken: 0.07
+        }
+      };
+
+      return profiles[channel] || profiles.k;
+    }
+
+    function applyPrintCurve(amount, channel) {
+      const curve = channel === "k"
+        ? 0.88
+        : channel === "y"
+          ? 1.1
+          : 0.96;
+
+      const mapped = Math.pow(clamp(amount, 0, 1), curve);
+
+      const floor = channel === "y" ? 0.03 : channel === "c" || channel === "m" ? 0.015 : 0;
+      return mapped > floor ? clamp((mapped - floor) / (1 - floor), 0, 1) : 0;
+    }
+
+    function buildInkColor(channel) {
+      const inks = {
+        c: { r: 0, g: 166, b: 214 },
+        m: { r: 214, g: 0, b: 110 },
+        y: { r: 255, g: 224, b: 0 },
+        k: { r: 18, g: 18, b: 22 }
+      };
+      const rgb = inks[channel];
+      const profile = getChannelProfile(channel);
+      return rgbToString(rgb, profile.alpha);
+    }
+
+    function drawPrintDot(x, y, radius, color, seed, angleDeg, channel = "k") {
+      if (radius <= 0) return;
+
+      const profile = getChannelProfile(channel);
+      const rough = Number(roughness.value) / 100;
+      const spread = Number(inkSpread.value) / 100;
+      const wobbleX = (rand2D(seed, 13, 71) - 0.5) * radius * profile.wobble;
+      const wobbleY = (rand2D(seed, 15, 73) - 0.5) * radius * profile.wobble;
+      const rotation = (angleDeg + (rand2D(seed, 17, 79) - 0.5) * 8) * Math.PI / 180;
+
+      const baseRadius = radius * profile.dotGain;
+      const pointCount = clamp(Math.round(12 + baseRadius * 1.1), 12, 24);
+
+      ctx.save();
+      ctx.translate(x + wobbleX, y + wobbleY);
+      ctx.rotate(rotation);
+      ctx.scale(profile.slurX, profile.slurY);
+      ctx.fillStyle = color;
+
+      if (baseRadius < 1.35 || rough < 0.03) {
+        ctx.beginPath();
+        ctx.arc(0, 0, baseRadius, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        for (let i = 0; i < pointCount; i++) {
+          const a = (i / pointCount) * Math.PI * 2;
+          const n = rand2D(seed + i * 1.71, seed * 5.3, 81);
+          const localRadius = baseRadius * (1 + (n - 0.5) * rough * 0.32);
+          const px = Math.cos(a) * localRadius;
+          const py = Math.sin(a) * localRadius;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      if (profile.edgeDarken > 0.01 && baseRadius > 1.1) {
+        ctx.save();
+        ctx.globalAlpha = profile.edgeDarken;
+        ctx.lineWidth = Math.max(0.5, baseRadius * 0.12);
+        ctx.strokeStyle = "rgba(0,0,0,0.9)";
+        ctx.beginPath();
+        ctx.arc(0, 0, baseRadius * 0.94, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (spread > 0.01 && baseRadius > 1.25) {
+        const bleedCount = 1 + Math.floor(spread * 4);
+        ctx.save();
+        ctx.globalAlpha = 0.06 + spread * 0.12;
+        for (let i = 0; i < bleedCount; i++) {
+          const a = rand2D(seed + i * 7.2, seed * 3.1, 83) * Math.PI * 2;
+          const dist = baseRadius * (0.68 + rand2D(seed + i, seed + i * 2, 85) * 0.42);
+          const r2 = baseRadius * (0.11 + spread * 0.16 + rand2D(seed + i * 3, seed, 87) * 0.06);
+          ctx.beginPath();
+          ctx.arc(Math.cos(a) * dist, Math.sin(a) * dist, r2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
+    function addPrintImpression() {
+      ctx.save();
+      ctx.globalCompositeOperation = "multiply";
+
+      const passCount = 2;
+      for (let pass = 0; pass < passCount; pass++) {
+        const step = pass === 0 ? 8 : 16;
+        for (let y = 0; y < canvas.height; y += step) {
+          for (let x = 0; x < canvas.width; x += step) {
+            const n = rand2D(x / step, y / step, 131 + pass * 17);
+            const alpha = (n - 0.5) * (pass === 0 ? 0.03 : 0.018);
+            ctx.fillStyle = alpha > 0
+              ? `rgba(0,0,0,${alpha})`
+              : `rgba(255,255,255,${Math.abs(alpha)})`;
+            ctx.fillRect(x, y, step, step);
+          }
+        }
+      }
+
+      ctx.restore();
     }
 
     function drawRoughDot(x, y, radius, color, seed = 0) {
@@ -1690,11 +1974,12 @@
       };
     }
 
-    function drawCmykChannel(data, channel, color, gridAngle, offsetVector, seedOffset) {
+    function drawCmykChannel(data, channel, gridAngle, offsetVector, seedOffset) {
       const scale = Number(dotScale.value) / 100;
       const shift = Number(misregister.value);
       const offsetAmountX = offsetVector.x * shift;
       const offsetAmountY = offsetVector.y * shift;
+      const color = buildInkColor(channel);
 
       ctx.save();
       ctx.globalCompositeOperation = "multiply";
@@ -1702,21 +1987,20 @@
       renderRotatedGrid((x, y, cos, sin, step, gx, gy) => {
         const rgb = rgbAt(data, canvas.width, canvas.height, x - offsetAmountX, y - offsetAmountY);
         const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
-        const amount = cmyk[channel];
+        const amount = applyPrintCurve(cmyk[channel], channel);
         const radius = Math.max(0, step * 0.5 * amount * scale);
 
-        if (radius < 0.32) return;
+        if (radius < 0.3) return;
 
         const seed = Math.floor((gx + 10000) * 0.09 + (gy + 10000) * 0.07 + seedOffset);
-        const localJitterX = (rand2D(seed, 7, 51) - 0.5) * Number(roughness.value) / 100 * 1.3;
-        const localJitterY = (rand2D(seed, 8, 53) - 0.5) * Number(roughness.value) / 100 * 1.3;
-
-        drawRoughDot(
-          x + offsetAmountX + localJitterX,
-          y + offsetAmountY + localJitterY,
+        drawPrintDot(
+          x + offsetAmountX,
+          y + offsetAmountY,
           radius,
           color,
-          seed
+          seed,
+          gridAngle,
+          channel
         );
       }, gridAngle);
 
@@ -1725,24 +2009,23 @@
 
     function drawSpotChannel(data, gridAngle) {
       const scale = Number(dotScale.value) / 100;
-      const thresholdValueLocal = Number(spotThreshold.value);
-      const opacity = Number(spotOpacity.value) / 100;
       const spot = hexToRgb(spotColor.value);
 
       ctx.save();
       ctx.globalCompositeOperation = "multiply";
 
       renderRotatedGrid((x, y, cos, sin, step, gx, gy) => {
-        const b = brightnessAt(data, canvas.width, canvas.height, x, y);
-        if (b > thresholdValueLocal) return;
+        const rgb = rgbAt(data, canvas.width, canvas.height, x, y);
+        const similarity = spotSimilarity(rgb, spot);
 
-        const amount = clamp((thresholdValueLocal - b) / Math.max(1, thresholdValueLocal), 0, 1);
-        const radius = Math.max(0, step * 0.5 * amount * scale);
+        if (similarity <= 0.02) return;
 
-        if (radius < 0.32) return;
+        const radius = Math.max(0, step * 0.52 * applyPrintCurve(similarity, "spot") * scale);
+
+        if (radius < 0.3) return;
 
         const seed = Math.floor((gx + 10000) * 0.12 + (gy + 10000) * 0.16 + 997);
-        drawRoughDot(x, y, radius, rgbToString(spot, opacity), seed);
+        drawPrintDot(x, y, radius, rgbToString(spot, getChannelProfile("spot").alpha), seed, gridAngle, "spot");
       }, gridAngle);
 
       ctx.restore();
@@ -1751,21 +2034,23 @@
     function renderCmykDots(data) {
       const angles = getCmykAngles();
 
+      if (showY.checked) {
+        drawCmykChannel(data, "y", angles.y, { x: 0, y: 0.2 }, 307);
+      }
       if (showC.checked) {
-        drawCmykChannel(data, "c", "rgba(0, 174, 239, 0.75)", angles.c, { x: -0.7, y: 0.35 }, 101);
+        drawCmykChannel(data, "c", angles.c, { x: -0.7, y: 0.35 }, 101);
       }
       if (showM.checked) {
-        drawCmykChannel(data, "m", "rgba(236, 0, 140, 0.72)", angles.m, { x: 0.65, y: -0.3 }, 203);
-      }
-      if (showY.checked) {
-        drawCmykChannel(data, "y", "rgba(255, 232, 0, 0.76)", angles.y, { x: 0, y: 0.2 }, 307);
+        drawCmykChannel(data, "m", angles.m, { x: 0.65, y: -0.3 }, 203);
       }
       if (showK.checked) {
-        drawCmykChannel(data, "k", "rgba(0, 0, 0, 0.88)", angles.k, { x: -0.2, y: -0.55 }, 409);
+        drawCmykChannel(data, "k", angles.k, { x: -0.2, y: -0.55 }, 409);
       }
       if (showSpot.checked) {
         drawSpotChannel(data, angles.spot);
       }
+
+      addPrintImpression();
     }
 
     function drawToneChannel(data, color, gridAngle, minB, maxB, offsetVector, seedOffset, useDarkness) {
@@ -1821,107 +2106,7 @@
       drawToneChannel(data, rgbToString(c3, 0.9), baseAngle + 60, 0, 135, { x: 0.1, y: 0.5 }, 901, true);
     }
 
-    function drawPosterOverlay() {
-      if (!posterEnabled.checked) return;
-
-      const margin = Number(posterMargin.value);
-      const align = posterAlign.value;
-      const color = posterColor.value;
-      const width = canvas.width - margin * 2;
-
-      ctx.save();
-      ctx.fillStyle = color;
-      ctx.textAlign = align;
-      ctx.textBaseline = "top";
-
-      let anchorX = margin;
-      if (align === "center") anchorX = canvas.width / 2;
-      if (align === "right") anchorX = canvas.width - margin;
-
-      const headlineText = formatPosterText(posterHeadline.value || "");
-      const subheadText = formatPosterText(posterSubhead.value || "");
-      const footerText = formatPosterText(posterFooter.value || "");
-
-      const headlineFont = `900 ${headlineSize.value}px -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif`;
-      ctx.font = headlineFont;
-      const headlineLines = wrapText(ctx, headlineText, width);
-
-      let y = margin;
-      headlineLines.forEach((line) => {
-        ctx.fillText(line, anchorX, y);
-        y += Number(headlineSize.value) * 0.92;
-      });
-
-      y += Number(subheadSize.value) * 0.45;
-
-      ctx.font = `700 ${subheadSize.value}px -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif`;
-      wrapText(ctx, subheadText, width).forEach((line) => {
-        ctx.fillText(line, anchorX, y);
-        y += Number(subheadSize.value) * 1.15;
-      });
-
-      ctx.font = `600 ${footerSize.value}px -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif`;
-      ctx.textBaseline = "bottom";
-      wrapText(ctx, footerText, width).reverse().forEach((line, index, arr) => {
-        const lineY = canvas.height - margin - (arr.length - 1 - index) * Number(footerSize.value) * 1.2;
-        ctx.fillText(line, anchorX, lineY);
-      });
-
-      ctx.restore();
-    }
-
-    function formatPosterText(text) {
-      const cleaned = String(text || "").trim();
-      return posterCaps.checked ? cleaned.toUpperCase() : cleaned;
-    }
-
-    function wrapText(context, text, maxWidth) {
-      if (!text) return [];
-      const paragraphs = String(text).split("\n");
-      const lines = [];
-
-      paragraphs.forEach((paragraph) => {
-        const words = paragraph.split(/\s+/).filter(Boolean);
-        if (!words.length) {
-          lines.push("");
-          return;
-        }
-
-        let line = words[0];
-
-        for (let i = 1; i < words.length; i++) {
-          const testLine = line + " " + words[i];
-          if (context.measureText(testLine).width <= maxWidth) {
-            line = testLine;
-          } else {
-            lines.push(line);
-            line = words[i];
-          }
-        }
-        lines.push(line);
-      });
-
-      return lines;
-    }
-
-    function render() {
-      updateLabels();
-
-      if (!image.naturalWidth) {
-        clearCanvas();
-        return;
-      }
-
-      if (showingOriginal) {
-        drawOriginal(canvas.width, canvas.height);
-        return;
-      }
-
-      clearCanvas();
-
-      const data = prepareSource(canvas.width, canvas.height);
-      if (!data) return;
-
+    function renderEffectLayers(data) {
       clearCanvas();
 
       if (mode.value === "monoDots") renderMonoDots(data);
@@ -1932,7 +2117,41 @@
       if (mode.value === "tritone") renderTritone(data);
 
       overlayPaperTexture();
-      drawPosterOverlay();
+    }
+
+    function render() {
+      updateLabels();
+
+      if (!image.naturalWidth) {
+        clearCanvas();
+        return;
+      }
+
+      if (splitCompareEnabled) {
+        const data = prepareSource(canvas.width, canvas.height);
+        if (!data) return;
+
+        renderEffectLayers(data);
+
+        const splitX = canvas.width * (splitPositionPercent / 100);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, splitX, canvas.height);
+        ctx.clip();
+        drawOriginal(canvas.width, canvas.height, false);
+        ctx.restore();
+        return;
+      }
+
+      if (showingOriginal) {
+        drawOriginal(canvas.width, canvas.height, true);
+        return;
+      }
+
+      const data = prepareSource(canvas.width, canvas.height);
+      if (!data) return;
+
+      renderEffectLayers(data);
     }
 
     function loadImage(file) {
@@ -1950,7 +2169,6 @@
         exportBtn.disabled = false;
         beforeAfterBtn.disabled = false;
         statusText.textContent = file.name;
-        setStageAspect();
         resizeCanvas();
       };
 
@@ -1963,9 +2181,11 @@
       const oldWidth = canvas.width;
       const oldHeight = canvas.height;
       const wasShowingOriginal = showingOriginal;
+      const wasSplitCompareEnabled = splitCompareEnabled;
       const dims = getOutputDimensions();
 
       showingOriginal = false;
+      splitCompareEnabled = false;
       canvas.width = dims.width;
       canvas.height = dims.height;
       canvasInfo.textContent = `${canvas.width} × ${canvas.height}`;
@@ -1985,6 +2205,7 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
 
         showingOriginal = wasShowingOriginal;
+        splitCompareEnabled = wasSplitCompareEnabled;
         canvas.width = oldWidth;
         canvas.height = oldHeight;
         canvasInfo.textContent = `${canvas.width} × ${canvas.height}`;
@@ -2066,20 +2287,11 @@
       imageScale.value = 100;
       offsetX.value = 0;
       offsetY.value = 0;
-      posterEnabled.checked = false;
-      posterCaps.checked = true;
-      posterHeadline.value = "HALFTONE LAB";
-      posterSubhead.value = "CMYK / ROSETTE / SPOT COLOUR";
-      posterFooter.value = "PRINT STUDY — AARON DEY";
-      posterColor.value = "#111111";
-      posterAlign.value = "left";
-      headlineSize.value = 110;
-      subheadSize.value = 24;
-      footerSize.value = 18;
-      posterMargin.value = 56;
       outputSize.value = "preview";
       showingOriginal = false;
-      render();
+      splitCompareEnabled = false;
+      splitPositionPercent = 50;
+      resizeCanvas();
     }
 
     function randomizeLook() {
@@ -2100,11 +2312,54 @@
       render();
     }
 
+    function setControlsHidden(hidden) {
+      controlsHidden = hidden;
+      workspace.classList.toggle("controls-hidden", controlsHidden);
+      toggleControlsBtn.textContent = controlsHidden ? "Show Controls" : "Hide Controls";
+      requestAnimationFrame(resizeCanvas);
+    }
+
+    function initializeCollapsibleSections() {
+      sidebarSections.forEach((section, index) => {
+        const title = section.querySelector(".section-title");
+        if (!title) return;
+
+        title.addEventListener("click", () => {
+          section.classList.toggle("collapsed");
+          requestAnimationFrame(resizeCanvas);
+        });
+
+        const titleText = title.textContent.trim().toLowerCase();
+
+        if (
+          titleText.includes("image") ||
+          titleText.includes("output")
+        ) {
+          section.classList.add("collapsed");
+        }
+      });
+    }
+
+    toggleControlsBtn.addEventListener("click", () => {
+      setControlsHidden(!controlsHidden);
+    });
+
+    initializeCollapsibleSections();
+
     imageUpload.addEventListener("change", (event) => loadImage(event.target.files[0]));
 
     beforeAfterBtn.addEventListener("click", () => {
       if (!image.naturalWidth) return;
       showingOriginal = !showingOriginal;
+      render();
+    });
+
+    splitCompareBtn.addEventListener("click", () => {
+      if (!image.naturalWidth) return;
+      splitCompareEnabled = !splitCompareEnabled;
+      if (splitCompareEnabled) {
+        showingOriginal = false;
+      }
       render();
     });
 
@@ -2153,17 +2408,6 @@
       imageScale,
       offsetX,
       offsetY,
-      posterEnabled,
-      posterCaps,
-      posterHeadline,
-      posterSubhead,
-      posterFooter,
-      posterColor,
-      posterAlign,
-      headlineSize,
-      subheadSize,
-      footerSize,
-      posterMargin,
       outputSize
     ];
 
@@ -2179,10 +2423,31 @@
       control.addEventListener("change", handler);
     });
 
+    function updateSplitFromClientX(clientX) {
+      const rect = stage.getBoundingClientRect();
+      splitPositionPercent = clamp(((clientX - rect.left) / rect.width) * 100, 0, 100);
+      render();
+    }
+
     stage.addEventListener("dragover", (event) => event.preventDefault());
     stage.addEventListener("drop", (event) => {
       event.preventDefault();
       loadImage(event.dataTransfer.files[0]);
+    });
+
+    stage.addEventListener("pointerdown", (event) => {
+      if (!splitCompareEnabled || !image.naturalWidth) return;
+      isDraggingSplit = true;
+      updateSplitFromClientX(event.clientX);
+    });
+
+    window.addEventListener("pointermove", (event) => {
+      if (!isDraggingSplit) return;
+      updateSplitFromClientX(event.clientX);
+    });
+
+    window.addEventListener("pointerup", () => {
+      isDraggingSplit = false;
     });
 
     window.addEventListener("resize", resizeCanvas);
