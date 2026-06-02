@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>HalftoneLab</title>
 
   <style>
@@ -14,8 +13,6 @@
     :root {
       --page: #f5f5f7;
       --surface: rgba(255, 255, 255, 0.78);
-      --surface-strong: #ffffff;
-      --surface-soft: #f2f2f4;
       --text: #1d1d1f;
       --secondary: #6e6e73;
       --tertiary: #98989d;
@@ -24,11 +21,10 @@
       --blue: #007aff;
       --blue-hover: #006ee6;
       --green: #34c759;
-      --orange: #ff9500;
       --shadow: 0 18px 60px rgba(0, 0, 0, 0.12);
       --radius-xl: 28px;
       --radius-lg: 18px;
-      --sidebar-width: 354px;
+      --sidebar-width: 380px;
     }
 
     body {
@@ -47,12 +43,13 @@
 
     button,
     input,
-    select {
+    select,
+    textarea {
       font: inherit;
     }
 
     .app-shell {
-      width: min(1480px, 100%);
+      width: min(1520px, 100%);
       min-height: calc(100vh - 48px);
       margin: 0 auto;
       display: grid;
@@ -91,7 +88,7 @@
       height: 42px;
       border-radius: 12px;
       background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.48)),
+        linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.48)),
         #f2f2f4;
       border: 1px solid var(--border);
       display: grid;
@@ -188,7 +185,7 @@
 
     .control {
       display: grid;
-      grid-template-columns: minmax(94px, 0.9fr) minmax(0, 1.1fr);
+      grid-template-columns: minmax(100px, 0.9fr) minmax(0, 1.1fr);
       align-items: center;
       gap: 12px;
       min-height: 52px;
@@ -203,6 +200,12 @@
     .control.full {
       grid-template-columns: 1fr;
       gap: 8px;
+      align-items: stretch;
+    }
+
+    .control.inline-checks {
+      grid-template-columns: 1fr;
+      gap: 10px;
       align-items: stretch;
     }
 
@@ -246,7 +249,9 @@
     }
 
     select,
-    input[type="color"] {
+    input[type="color"],
+    input[type="text"],
+    textarea {
       width: 100%;
       min-height: 36px;
       border: 1px solid var(--border);
@@ -258,8 +263,15 @@
       transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
     }
 
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
     select:focus,
-    input[type="color"]:focus {
+    input[type="color"]:focus,
+    input[type="text"]:focus,
+    textarea:focus {
       border-color: rgba(0, 122, 255, 0.65);
       box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.13);
       background: #fff;
@@ -274,6 +286,34 @@
       width: 100%;
       accent-color: var(--blue);
       cursor: pointer;
+    }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .check-grid.check-grid-spot {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .check-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.92);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .check-pill input {
+      margin: 0;
     }
 
     button,
@@ -536,6 +576,10 @@
       .preview-status {
         justify-content: flex-start;
       }
+
+      .check-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
   </style>
 </head>
@@ -551,7 +595,7 @@
         </div>
         <div class="title-copy">
           <h1>HalftoneLab</h1>
-          <div class="subtitle">Image to print-style halftone converter</div>
+          <div class="subtitle">CMYK-focused print-style halftone converter</div>
         </div>
       </div>
 
@@ -587,6 +631,19 @@
                 <option value="punkZine">Punk Zine</option>
                 <option value="screenPrint">Screen Print</option>
                 <option value="coatedMagazine">Coated Magazine</option>
+              </select>
+            </div>
+            <div class="control">
+              <label for="paperStock">Stock</label>
+              <select id="paperStock">
+                <option value="custom">Custom</option>
+                <option value="newsprint">Newsprint</option>
+                <option value="uncoated">Uncoated</option>
+                <option value="coatedGloss">Coated Gloss</option>
+                <option value="mattePoster">Matte Poster</option>
+                <option value="recycledKraft">Recycled Kraft</option>
+                <option value="zineCopy">Zine Copy Paper</option>
+                <option value="riso">Riso Paper</option>
               </select>
             </div>
           </div>
@@ -644,6 +701,51 @@
         </section>
 
         <section class="section">
+          <div class="section-title">CMYK Focus</div>
+          <div class="control-list">
+            <div class="control">
+              <label for="cmykScreen">Screen</label>
+              <select id="cmykScreen">
+                <option value="expressive">Expressive</option>
+                <option value="rosette">Rosette</option>
+              </select>
+            </div>
+
+            <div class="control inline-checks">
+              <div class="label">Channels</div>
+              <div class="check-grid">
+                <label class="check-pill"><input id="showC" type="checkbox" checked /> C</label>
+                <label class="check-pill"><input id="showM" type="checkbox" checked /> M</label>
+                <label class="check-pill"><input id="showY" type="checkbox" checked /> Y</label>
+                <label class="check-pill"><input id="showK" type="checkbox" checked /> K</label>
+                <label class="check-pill"><input id="showSpot" type="checkbox" /> Spot</label>
+              </div>
+            </div>
+
+            <div class="control">
+              <label for="spotColor">Spot Colour</label>
+              <input id="spotColor" type="color" value="#ff5f00" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="spotThreshold">Spot Threshold</label>
+                <span class="value-label" id="spotThresholdValue">110</span>
+              </div>
+              <input id="spotThreshold" type="range" min="0" max="255" value="110" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="spotOpacity">Spot Opacity</label>
+                <span class="value-label"><span id="spotOpacityValue">78</span>%</span>
+              </div>
+              <input id="spotOpacity" type="range" min="0" max="100" value="78" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
           <div class="section-title">Halftone</div>
           <div class="control-list">
             <div class="control full">
@@ -664,7 +766,7 @@
 
             <div class="control full">
               <div class="range-head">
-                <label for="angle">Angle</label>
+                <label for="angle">Base Angle</label>
                 <span class="value-label"><span id="angleValue">15</span>°</span>
               </div>
               <input id="angle" type="range" min="-90" max="90" value="15" />
@@ -758,6 +860,80 @@
         </section>
 
         <section class="section">
+          <div class="section-title">Poster Text Overlay</div>
+          <div class="control-list">
+            <div class="control inline-checks">
+              <div class="label">Overlay</div>
+              <div class="check-grid check-grid-spot">
+                <label class="check-pill"><input id="posterEnabled" type="checkbox" /> Enable Text</label>
+                <label class="check-pill"><input id="posterCaps" type="checkbox" checked /> Uppercase</label>
+              </div>
+            </div>
+
+            <div class="control full">
+              <label for="posterHeadline">Headline</label>
+              <textarea id="posterHeadline" placeholder="Add a big headline">HALFTONE LAB</textarea>
+            </div>
+
+            <div class="control full">
+              <label for="posterSubhead">Subhead</label>
+              <input id="posterSubhead" type="text" placeholder="Subhead" value="CMYK / ROSETTE / SPOT COLOUR" />
+            </div>
+
+            <div class="control full">
+              <label for="posterFooter">Footer</label>
+              <input id="posterFooter" type="text" placeholder="Footer" value="PRINT STUDY — AARON DEY" />
+            </div>
+
+            <div class="control">
+              <label for="posterColor">Text Colour</label>
+              <input id="posterColor" type="color" value="#111111" />
+            </div>
+
+            <div class="control">
+              <label for="posterAlign">Align</label>
+              <select id="posterAlign">
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="headlineSize">Headline Size</label>
+                <span class="value-label"><span id="headlineSizeValue">110</span></span>
+              </div>
+              <input id="headlineSize" type="range" min="36" max="240" value="110" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="subheadSize">Subhead Size</label>
+                <span class="value-label"><span id="subheadSizeValue">24</span></span>
+              </div>
+              <input id="subheadSize" type="range" min="12" max="80" value="24" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="footerSize">Footer Size</label>
+                <span class="value-label"><span id="footerSizeValue">18</span></span>
+              </div>
+              <input id="footerSize" type="range" min="10" max="52" value="18" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="posterMargin">Margin</label>
+                <span class="value-label"><span id="posterMarginValue">56</span> px</span>
+              </div>
+              <input id="posterMargin" type="range" min="16" max="180" value="56" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
           <div class="section-title">Output</div>
           <div class="control-list">
             <div class="control">
@@ -783,11 +959,12 @@
         <div class="preview-header">
           <div class="preview-title">
             <strong>Preview</strong>
-            <span>Drag an image onto the canvas or choose a file.</span>
+            <span>CMYK mode now supports channel visibility, spot colour, paper stock, rosette screens, and poster text overlay.</span>
           </div>
           <div class="preview-status">
             <span class="chip"><span class="chip-dot"></span>Local render</span>
-            <span class="chip">CMYK, duotone, tritone</span>
+            <span class="chip">CMYK focus</span>
+            <span class="chip">Poster overlay</span>
           </div>
         </div>
 
@@ -812,13 +989,13 @@
             <strong id="modeInfo">CMYK Dots</strong>
           </div>
           <div class="status-item">
-            <span>Preset</span>
-            <strong id="presetInfo">Custom</strong>
+            <span>CMYK</span>
+            <strong id="cmykInfo">Expressive / CMYK</strong>
           </div>
         </section>
 
         <p class="note">
-          New in this version: print presets, before/after toggle, duotone mode, tritone mode, and stronger CMYK preset workflows. SVG export is still better saved for a later pass because it needs a cleaner vector-specific export path.
+          This version is focused on CMYK: traditional rosette screens, channel toggles, spot colour, stock-driven paper simulation, and poster typography on top of the image.
         </p>
       </main>
     </section>
@@ -827,14 +1004,30 @@
   <script>
     const imageUpload = document.getElementById("imageUpload");
     const beforeAfterBtn = document.getElementById("beforeAfterBtn");
+    const randomizeBtn = document.getElementById("randomizeBtn");
+    const exportBtn = document.getElementById("exportBtn");
+
     const preset = document.getElementById("preset");
+    const paperStock = document.getElementById("paperStock");
     const mode = document.getElementById("mode");
     const fitMode = document.getElementById("fitMode");
+
     const paperColor = document.getElementById("paperColor");
     const inkColor = document.getElementById("inkColor");
     const toneOne = document.getElementById("toneOne");
     const toneTwo = document.getElementById("toneTwo");
     const toneThree = document.getElementById("toneThree");
+
+    const cmykScreen = document.getElementById("cmykScreen");
+    const showC = document.getElementById("showC");
+    const showM = document.getElementById("showM");
+    const showY = document.getElementById("showY");
+    const showK = document.getElementById("showK");
+    const showSpot = document.getElementById("showSpot");
+    const spotColor = document.getElementById("spotColor");
+    const spotThreshold = document.getElementById("spotThreshold");
+    const spotOpacity = document.getElementById("spotOpacity");
+
     const spacing = document.getElementById("spacing");
     const dotScale = document.getElementById("dotScale");
     const angle = document.getElementById("angle");
@@ -843,22 +1036,35 @@
     const inkSpread = document.getElementById("inkSpread");
     const misregister = document.getElementById("misregister");
     const grain = document.getElementById("grain");
+
     const contrast = document.getElementById("contrast");
     const brightness = document.getElementById("brightness");
     const imageScale = document.getElementById("imageScale");
     const offsetX = document.getElementById("offsetX");
     const offsetY = document.getElementById("offsetY");
+
+    const posterEnabled = document.getElementById("posterEnabled");
+    const posterCaps = document.getElementById("posterCaps");
+    const posterHeadline = document.getElementById("posterHeadline");
+    const posterSubhead = document.getElementById("posterSubhead");
+    const posterFooter = document.getElementById("posterFooter");
+    const posterColor = document.getElementById("posterColor");
+    const posterAlign = document.getElementById("posterAlign");
+    const headlineSize = document.getElementById("headlineSize");
+    const subheadSize = document.getElementById("subheadSize");
+    const footerSize = document.getElementById("footerSize");
+    const posterMargin = document.getElementById("posterMargin");
+
     const outputSize = document.getElementById("outputSize");
-    const exportBtn = document.getElementById("exportBtn");
     const resetBtn = document.getElementById("resetBtn");
-    const randomizeBtn = document.getElementById("randomizeBtn");
     const stage = document.getElementById("stage");
     const canvas = document.getElementById("canvas");
     const overlayMessage = document.getElementById("overlayMessage");
+
     const statusText = document.getElementById("status");
     const canvasInfo = document.getElementById("canvasInfo");
     const modeInfo = document.getElementById("modeInfo");
-    const presetInfo = document.getElementById("presetInfo");
+    const cmykInfo = document.getElementById("cmykInfo");
 
     const spacingValue = document.getElementById("spacingValue");
     const dotScaleValue = document.getElementById("dotScaleValue");
@@ -873,12 +1079,19 @@
     const imageScaleValue = document.getElementById("imageScaleValue");
     const offsetXValue = document.getElementById("offsetXValue");
     const offsetYValue = document.getElementById("offsetYValue");
+    const spotThresholdValue = document.getElementById("spotThresholdValue");
+    const spotOpacityValue = document.getElementById("spotOpacityValue");
+    const headlineSizeValue = document.getElementById("headlineSizeValue");
+    const subheadSizeValue = document.getElementById("subheadSizeValue");
+    const footerSizeValue = document.getElementById("footerSizeValue");
+    const posterMarginValue = document.getElementById("posterMarginValue");
 
     const ctx = canvas.getContext("2d");
     const sourceCanvas = document.createElement("canvas");
     const sourceCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
 
     const image = new Image();
+
     let currentObjectUrl = null;
     let fileBaseName = "halftone";
     let previewWidth = 0;
@@ -887,7 +1100,9 @@
 
     const presets = {
       newsprint: {
+        paperStock: "newsprint",
         mode: "cmykDots",
+        cmykScreen: "rosette",
         paperColor: "#ede6d2",
         inkColor: "#171717",
         toneOne: "#111111",
@@ -902,10 +1117,14 @@
         misregister: 5,
         grain: 54,
         contrast: 135,
-        brightness: 98
+        brightness: 98,
+        showSpot: false,
+        spotColor: "#ff5f00"
       },
       risograph: {
+        paperStock: "riso",
         mode: "duotone",
+        cmykScreen: "expressive",
         paperColor: "#fff7df",
         inkColor: "#111111",
         toneOne: "#ff4f8b",
@@ -920,10 +1139,14 @@
         misregister: 7,
         grain: 38,
         contrast: 125,
-        brightness: 105
+        brightness: 105,
+        showSpot: false,
+        spotColor: "#ff5f00"
       },
       offsetPoster: {
+        paperStock: "mattePoster",
         mode: "cmykDots",
+        cmykScreen: "expressive",
         paperColor: "#f7f2e8",
         inkColor: "#111111",
         toneOne: "#0057ff",
@@ -938,10 +1161,14 @@
         misregister: 3,
         grain: 18,
         contrast: 118,
-        brightness: 100
+        brightness: 100,
+        showSpot: true,
+        spotColor: "#ff5f00"
       },
       punkZine: {
+        paperStock: "zineCopy",
         mode: "bitmap",
+        cmykScreen: "expressive",
         paperColor: "#f4ecd7",
         inkColor: "#050505",
         toneOne: "#050505",
@@ -956,10 +1183,14 @@
         misregister: 0,
         grain: 70,
         contrast: 185,
-        brightness: 92
+        brightness: 92,
+        showSpot: false,
+        spotColor: "#ff003c"
       },
       screenPrint: {
+        paperStock: "mattePoster",
         mode: "tritone",
+        cmykScreen: "expressive",
         paperColor: "#fbf7ed",
         inkColor: "#111111",
         toneOne: "#ff3b30",
@@ -974,10 +1205,14 @@
         misregister: 4,
         grain: 26,
         contrast: 132,
-        brightness: 100
+        brightness: 100,
+        showSpot: false,
+        spotColor: "#ff5f00"
       },
       coatedMagazine: {
+        paperStock: "coatedGloss",
         mode: "cmykDots",
+        cmykScreen: "rosette",
         paperColor: "#ffffff",
         inkColor: "#111111",
         toneOne: "#0057ff",
@@ -992,8 +1227,21 @@
         misregister: 1,
         grain: 4,
         contrast: 108,
-        brightness: 104
+        brightness: 104,
+        showSpot: false,
+        spotColor: "#ff5f00"
       }
+    };
+
+    const stockPresets = {
+      custom: null,
+      newsprint: { paperColor: "#ede6d2", grain: 56, roughness: 62, inkSpread: 34 },
+      uncoated: { paperColor: "#f6f0e2", grain: 26, roughness: 28, inkSpread: 18 },
+      coatedGloss: { paperColor: "#ffffff", grain: 4, roughness: 8, inkSpread: 6 },
+      mattePoster: { paperColor: "#f7f2e8", grain: 16, roughness: 20, inkSpread: 14 },
+      recycledKraft: { paperColor: "#cbb58b", grain: 48, roughness: 44, inkSpread: 28 },
+      zineCopy: { paperColor: "#f4ecd7", grain: 62, roughness: 70, inkSpread: 42 },
+      riso: { paperColor: "#fff7df", grain: 34, roughness: 46, inkSpread: 36 }
     };
 
     function hexToRgb(hex) {
@@ -1033,14 +1281,29 @@
       imageScaleValue.textContent = imageScale.value;
       offsetXValue.textContent = offsetX.value;
       offsetYValue.textContent = offsetY.value;
+      spotThresholdValue.textContent = spotThreshold.value;
+      spotOpacityValue.textContent = spotOpacity.value;
+      headlineSizeValue.textContent = headlineSize.value;
+      subheadSizeValue.textContent = subheadSize.value;
+      footerSizeValue.textContent = footerSize.value;
+      posterMarginValue.textContent = posterMargin.value;
+
       modeInfo.textContent = mode.options[mode.selectedIndex].text;
-      presetInfo.textContent = preset.options[preset.selectedIndex].text;
       beforeAfterBtn.textContent = showingOriginal ? "Show Effect" : "Show Original";
+
+      const activeChannels = [
+        showC.checked ? "C" : null,
+        showM.checked ? "M" : null,
+        showY.checked ? "Y" : null,
+        showK.checked ? "K" : null,
+        showSpot.checked ? "Spot" : null
+      ].filter(Boolean).join(" / ") || "No channels";
+
+      cmykInfo.textContent = `${cmykScreen.value === "rosette" ? "Rosette" : "Expressive"} / ${activeChannels}`;
     }
 
     function markCustom() {
       preset.value = "custom";
-      updateLabels();
     }
 
     function getOutputDimensions() {
@@ -1062,10 +1325,13 @@
     function resizeCanvas() {
       const rect = stage.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
+
       previewWidth = Math.max(320, Math.round(rect.width * dpr));
       previewHeight = Math.max(220, Math.round(rect.height * dpr));
+
       canvas.width = previewWidth;
       canvas.height = previewHeight;
+
       canvasInfo.textContent = `${canvas.width} × ${canvas.height}`;
       render();
     }
@@ -1271,7 +1537,6 @@
       points.forEach((p, i) => {
         const jx = (rand2D(seed + i, seed * 5.4, 21) - 0.5) * size * 0.18 * rough;
         const jy = (rand2D(seed + i * 4, seed * 2.9, 23) - 0.5) * size * 0.18 * rough;
-
         if (i === 0) ctx.moveTo(p.x + jx, p.y + jy);
         else ctx.lineTo(p.x + jx, p.y + jy);
       });
@@ -1312,26 +1577,6 @@
       }
 
       ctx.restore();
-
-      ctx.save();
-      ctx.globalCompositeOperation = "multiply";
-      ctx.globalAlpha = 0.035 * amount;
-      ctx.strokeStyle = "#000";
-      ctx.lineWidth = 1;
-
-      for (let i = 0; i < canvas.width * canvas.height / 28000; i++) {
-        const x = rand2D(i, 5, 131) * canvas.width;
-        const y = rand2D(i, 9, 133) * canvas.height;
-        const len = 2 + rand2D(i, 15, 137) * 8;
-        const ang = rand2D(i, 21, 139) * Math.PI * 2;
-
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + Math.cos(ang) * len, y + Math.sin(ang) * len);
-        ctx.stroke();
-      }
-
-      ctx.restore();
     }
 
     function renderRotatedGrid(drawCallback, gridAngle, channelOffsetX = 0, channelOffsetY = 0) {
@@ -1351,7 +1596,6 @@
           const y = cy + gx * sin + gy * cos + channelOffsetY;
 
           if (x < -step || x > width + step || y < -step || y > height + step) continue;
-
           drawCallback(x, y, cos, sin, step, gx, gy);
         }
       }
@@ -1365,7 +1609,7 @@
       renderRotatedGrid((x, y, cos, sin, step, gx, gy) => {
         const b = brightnessAt(data, canvas.width, canvas.height, x, y);
         const darkness = 1 - b / 255;
-        const radius = Math.max(0, (step * 0.52) * darkness * scale);
+        const radius = Math.max(0, step * 0.52 * darkness * scale);
 
         if (radius < 0.32) return;
 
@@ -1404,19 +1648,6 @@
         ctx.moveTo(x - c * length / 2 + jx, y - s * length / 2 + jy);
         ctx.lineTo(x + c * length / 2 + jx, y + s * length / 2 + jy);
         ctx.stroke();
-
-        const spread = Number(inkSpread.value) / 100;
-
-        if (spread > 0.05) {
-          ctx.save();
-          ctx.globalAlpha = 0.09 + spread * 0.1;
-          ctx.lineWidth = lineWidth * (1.15 + spread * 0.25);
-          ctx.beginPath();
-          ctx.moveTo(x - c * length / 2 + jx, y - s * length / 2 + jy);
-          ctx.lineTo(x + c * length / 2 + jx, y + s * length / 2 + jy);
-          ctx.stroke();
-          ctx.restore();
-        }
       }, gridAngle);
     }
 
@@ -1437,6 +1668,28 @@
       }, gridAngle);
     }
 
+    function getCmykAngles() {
+      const base = Number(angle.value);
+
+      if (cmykScreen.value === "rosette") {
+        return {
+          c: 15,
+          m: 75,
+          y: 0,
+          k: 45,
+          spot: 30
+        };
+      }
+
+      return {
+        c: base + 15,
+        m: base + 75,
+        y: base,
+        k: base + 45,
+        spot: base + 30
+      };
+    }
+
     function drawCmykChannel(data, channel, color, gridAngle, offsetVector, seedOffset) {
       const scale = Number(dotScale.value) / 100;
       const shift = Number(misregister.value);
@@ -1450,7 +1703,7 @@
         const rgb = rgbAt(data, canvas.width, canvas.height, x - offsetAmountX, y - offsetAmountY);
         const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
         const amount = cmyk[channel];
-        const radius = Math.max(0, (step * 0.5) * amount * scale);
+        const radius = Math.max(0, step * 0.5 * amount * scale);
 
         if (radius < 0.32) return;
 
@@ -1470,44 +1723,49 @@
       ctx.restore();
     }
 
+    function drawSpotChannel(data, gridAngle) {
+      const scale = Number(dotScale.value) / 100;
+      const thresholdValueLocal = Number(spotThreshold.value);
+      const opacity = Number(spotOpacity.value) / 100;
+      const spot = hexToRgb(spotColor.value);
+
+      ctx.save();
+      ctx.globalCompositeOperation = "multiply";
+
+      renderRotatedGrid((x, y, cos, sin, step, gx, gy) => {
+        const b = brightnessAt(data, canvas.width, canvas.height, x, y);
+        if (b > thresholdValueLocal) return;
+
+        const amount = clamp((thresholdValueLocal - b) / Math.max(1, thresholdValueLocal), 0, 1);
+        const radius = Math.max(0, step * 0.5 * amount * scale);
+
+        if (radius < 0.32) return;
+
+        const seed = Math.floor((gx + 10000) * 0.12 + (gy + 10000) * 0.16 + 997);
+        drawRoughDot(x, y, radius, rgbToString(spot, opacity), seed);
+      }, gridAngle);
+
+      ctx.restore();
+    }
+
     function renderCmykDots(data) {
-      const baseAngle = Number(angle.value);
+      const angles = getCmykAngles();
 
-      drawCmykChannel(
-        data,
-        "c",
-        "rgba(0, 174, 239, 0.75)",
-        baseAngle + 15,
-        { x: -0.7, y: 0.35 },
-        101
-      );
-
-      drawCmykChannel(
-        data,
-        "m",
-        "rgba(236, 0, 140, 0.72)",
-        baseAngle + 75,
-        { x: 0.65, y: -0.3 },
-        203
-      );
-
-      drawCmykChannel(
-        data,
-        "y",
-        "rgba(255, 232, 0, 0.76)",
-        baseAngle,
-        { x: 0, y: 0.2 },
-        307
-      );
-
-      drawCmykChannel(
-        data,
-        "k",
-        "rgba(0, 0, 0, 0.88)",
-        baseAngle + 45,
-        { x: -0.2, y: -0.55 },
-        409
-      );
+      if (showC.checked) {
+        drawCmykChannel(data, "c", "rgba(0, 174, 239, 0.75)", angles.c, { x: -0.7, y: 0.35 }, 101);
+      }
+      if (showM.checked) {
+        drawCmykChannel(data, "m", "rgba(236, 0, 140, 0.72)", angles.m, { x: 0.65, y: -0.3 }, 203);
+      }
+      if (showY.checked) {
+        drawCmykChannel(data, "y", "rgba(255, 232, 0, 0.76)", angles.y, { x: 0, y: 0.2 }, 307);
+      }
+      if (showK.checked) {
+        drawCmykChannel(data, "k", "rgba(0, 0, 0, 0.88)", angles.k, { x: -0.2, y: -0.55 }, 409);
+      }
+      if (showSpot.checked) {
+        drawSpotChannel(data, angles.spot);
+      }
     }
 
     function drawToneChannel(data, color, gridAngle, minB, maxB, offsetVector, seedOffset, useDarkness) {
@@ -1525,7 +1783,6 @@
         if (b < minB || b > maxB) return;
 
         let amount;
-
         if (useDarkness) {
           amount = 1 - b / 255;
         } else {
@@ -1535,7 +1792,6 @@
         }
 
         const radius = Math.max(0, step * 0.5 * amount * scale);
-
         if (radius < 0.32) return;
 
         const seed = Math.floor((gx + 10000) * 0.11 + (gy + 10000) * 0.13 + seedOffset);
@@ -1550,27 +1806,8 @@
       const c1 = hexToRgb(toneOne.value);
       const c2 = hexToRgb(toneTwo.value);
 
-      drawToneChannel(
-        data,
-        rgbToString(c1, 0.85),
-        baseAngle,
-        95,
-        255,
-        { x: -0.4, y: 0.25 },
-        501,
-        false
-      );
-
-      drawToneChannel(
-        data,
-        rgbToString(c2, 0.92),
-        baseAngle + 45,
-        0,
-        190,
-        { x: 0.55, y: -0.2 },
-        601,
-        true
-      );
+      drawToneChannel(data, rgbToString(c1, 0.85), baseAngle, 95, 255, { x: -0.4, y: 0.25 }, 501, false);
+      drawToneChannel(data, rgbToString(c2, 0.92), baseAngle + 45, 0, 190, { x: 0.55, y: -0.2 }, 601, true);
     }
 
     function renderTritone(data) {
@@ -1579,38 +1816,92 @@
       const c2 = hexToRgb(toneTwo.value);
       const c3 = hexToRgb(toneThree.value);
 
-      drawToneChannel(
-        data,
-        rgbToString(c1, 0.8),
-        baseAngle - 25,
-        150,
-        255,
-        { x: -0.5, y: 0.25 },
-        701,
-        false
-      );
+      drawToneChannel(data, rgbToString(c1, 0.8), baseAngle - 25, 150, 255, { x: -0.5, y: 0.25 }, 701, false);
+      drawToneChannel(data, rgbToString(c2, 0.78), baseAngle + 25, 70, 195, { x: 0.45, y: -0.2 }, 801, false);
+      drawToneChannel(data, rgbToString(c3, 0.9), baseAngle + 60, 0, 135, { x: 0.1, y: 0.5 }, 901, true);
+    }
 
-      drawToneChannel(
-        data,
-        rgbToString(c2, 0.78),
-        baseAngle + 25,
-        70,
-        195,
-        { x: 0.45, y: -0.2 },
-        801,
-        false
-      );
+    function drawPosterOverlay() {
+      if (!posterEnabled.checked) return;
 
-      drawToneChannel(
-        data,
-        rgbToString(c3, 0.9),
-        baseAngle + 60,
-        0,
-        135,
-        { x: 0.1, y: 0.5 },
-        901,
-        true
-      );
+      const margin = Number(posterMargin.value);
+      const align = posterAlign.value;
+      const color = posterColor.value;
+      const width = canvas.width - margin * 2;
+
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.textAlign = align;
+      ctx.textBaseline = "top";
+
+      let anchorX = margin;
+      if (align === "center") anchorX = canvas.width / 2;
+      if (align === "right") anchorX = canvas.width - margin;
+
+      const headlineText = formatPosterText(posterHeadline.value || "");
+      const subheadText = formatPosterText(posterSubhead.value || "");
+      const footerText = formatPosterText(posterFooter.value || "");
+
+      const headlineFont = `900 ${headlineSize.value}px -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif`;
+      ctx.font = headlineFont;
+      const headlineLines = wrapText(ctx, headlineText, width);
+
+      let y = margin;
+      headlineLines.forEach((line) => {
+        ctx.fillText(line, anchorX, y);
+        y += Number(headlineSize.value) * 0.92;
+      });
+
+      y += Number(subheadSize.value) * 0.45;
+
+      ctx.font = `700 ${subheadSize.value}px -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif`;
+      wrapText(ctx, subheadText, width).forEach((line) => {
+        ctx.fillText(line, anchorX, y);
+        y += Number(subheadSize.value) * 1.15;
+      });
+
+      ctx.font = `600 ${footerSize.value}px -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif`;
+      ctx.textBaseline = "bottom";
+      wrapText(ctx, footerText, width).reverse().forEach((line, index, arr) => {
+        const lineY = canvas.height - margin - (arr.length - 1 - index) * Number(footerSize.value) * 1.2;
+        ctx.fillText(line, anchorX, lineY);
+      });
+
+      ctx.restore();
+    }
+
+    function formatPosterText(text) {
+      const cleaned = String(text || "").trim();
+      return posterCaps.checked ? cleaned.toUpperCase() : cleaned;
+    }
+
+    function wrapText(context, text, maxWidth) {
+      if (!text) return [];
+      const paragraphs = String(text).split("\n");
+      const lines = [];
+
+      paragraphs.forEach((paragraph) => {
+        const words = paragraph.split(/\s+/).filter(Boolean);
+        if (!words.length) {
+          lines.push("");
+          return;
+        }
+
+        let line = words[0];
+
+        for (let i = 1; i < words.length; i++) {
+          const testLine = line + " " + words[i];
+          if (context.measureText(testLine).width <= maxWidth) {
+            line = testLine;
+          } else {
+            lines.push(line);
+            line = words[i];
+          }
+        }
+        lines.push(line);
+      });
+
+      return lines;
     }
 
     function render() {
@@ -1641,6 +1932,7 @@
       if (mode.value === "tritone") renderTritone(data);
 
       overlayPaperTexture();
+      drawPosterOverlay();
     }
 
     function loadImage(file) {
@@ -1708,7 +2000,9 @@
 
       const p = presets[name];
 
+      paperStock.value = p.paperStock;
       mode.value = p.mode;
+      cmykScreen.value = p.cmykScreen;
       paperColor.value = p.paperColor;
       inkColor.value = p.inkColor;
       toneOne.value = p.toneOne;
@@ -1724,12 +2018,25 @@
       grain.value = p.grain;
       contrast.value = p.contrast;
       brightness.value = p.brightness;
+      showSpot.checked = p.showSpot;
+      spotColor.value = p.spotColor;
+      render();
+    }
 
+    function applyPaperStock(name) {
+      if (!stockPresets[name]) return;
+
+      const stock = stockPresets[name];
+      paperColor.value = stock.paperColor;
+      grain.value = stock.grain;
+      roughness.value = stock.roughness;
+      inkSpread.value = stock.inkSpread;
       render();
     }
 
     function resetControls() {
       preset.value = "custom";
+      paperStock.value = "custom";
       mode.value = "cmykDots";
       fitMode.value = "contain";
       paperColor.value = "#f8f3e7";
@@ -1737,6 +2044,15 @@
       toneOne.value = "#0057ff";
       toneTwo.value = "#ff2d55";
       toneThree.value = "#111111";
+      cmykScreen.value = "expressive";
+      showC.checked = true;
+      showM.checked = true;
+      showY.checked = true;
+      showK.checked = true;
+      showSpot.checked = false;
+      spotColor.value = "#ff5f00";
+      spotThreshold.value = 110;
+      spotOpacity.value = 78;
       spacing.value = 12;
       dotScale.value = 95;
       angle.value = 15;
@@ -1750,6 +2066,17 @@
       imageScale.value = 100;
       offsetX.value = 0;
       offsetY.value = 0;
+      posterEnabled.checked = false;
+      posterCaps.checked = true;
+      posterHeadline.value = "HALFTONE LAB";
+      posterSubhead.value = "CMYK / ROSETTE / SPOT COLOUR";
+      posterFooter.value = "PRINT STUDY — AARON DEY";
+      posterColor.value = "#111111";
+      posterAlign.value = "left";
+      headlineSize.value = 110;
+      subheadSize.value = 24;
+      footerSize.value = 18;
+      posterMargin.value = 56;
       outputSize.value = "preview";
       showingOriginal = false;
       render();
@@ -1757,14 +2084,19 @@
 
     function randomizeLook() {
       const presetKeys = ["newsprint", "risograph", "offsetPoster", "punkZine", "screenPrint", "coatedMagazine"];
-      const randomPreset = presetKeys[Math.floor(Math.random() * presetKeys.length)];
-      preset.value = randomPreset;
-      applyPreset(randomPreset);
+      const key = presetKeys[Math.floor(Math.random() * presetKeys.length)];
+      preset.value = key;
+      applyPreset(key);
 
       spacing.value = Math.max(4, Math.min(42, Number(spacing.value) + Math.floor(-2 + Math.random() * 5)));
-      dotScale.value = Math.max(30, Math.min(170, Number(dotScale.value) + Math.floor(-12 + Math.random() * 25)));
-      angle.value = Math.max(-90, Math.min(90, Number(angle.value) + Math.floor(-10 + Math.random() * 21)));
-      misregister.value = Math.max(0, Math.min(16, Number(misregister.value) + Math.floor(-2 + Math.random() * 5)));
+      dotScale.value = Math.max(30, Math.min(170, Number(dotScale.value) + Math.floor(-10 + Math.random() * 21)));
+      angle.value = Math.max(-90, Math.min(90, Number(angle.value) + Math.floor(-8 + Math.random() * 17)));
+
+      if (mode.value === "cmykDots") {
+        cmykScreen.value = Math.random() > 0.5 ? "rosette" : "expressive";
+        showSpot.checked = Math.random() > 0.45;
+      }
+
       render();
     }
 
@@ -1777,11 +2109,18 @@
     });
 
     exportBtn.addEventListener("click", exportPng);
-    resetBtn.addEventListener("click", resetControls);
     randomizeBtn.addEventListener("click", randomizeLook);
+    resetBtn.addEventListener("click", resetControls);
 
     preset.addEventListener("change", () => {
       applyPreset(preset.value);
+    });
+
+    paperStock.addEventListener("change", () => {
+      if (paperStock.value !== "custom") {
+        applyPaperStock(paperStock.value);
+      }
+      markCustom();
     });
 
     const liveControls = [
@@ -1792,6 +2131,15 @@
       toneOne,
       toneTwo,
       toneThree,
+      cmykScreen,
+      showC,
+      showM,
+      showY,
+      showK,
+      showSpot,
+      spotColor,
+      spotThreshold,
+      spotOpacity,
       spacing,
       dotScale,
       angle,
@@ -1805,22 +2153,33 @@
       imageScale,
       offsetX,
       offsetY,
+      posterEnabled,
+      posterCaps,
+      posterHeadline,
+      posterSubhead,
+      posterFooter,
+      posterColor,
+      posterAlign,
+      headlineSize,
+      subheadSize,
+      footerSize,
+      posterMargin,
       outputSize
     ];
 
     liveControls.forEach((control) => {
-      control.addEventListener("input", () => {
-        if (control !== outputSize) markCustom();
+      const handler = () => {
+        if (control !== outputSize) {
+          markCustom();
+        }
         render();
-      });
-      control.addEventListener("change", () => {
-        if (control !== outputSize) markCustom();
-        render();
-      });
+      };
+
+      control.addEventListener("input", handler);
+      control.addEventListener("change", handler);
     });
 
     stage.addEventListener("dragover", (event) => event.preventDefault());
-
     stage.addEventListener("drop", (event) => {
       event.preventDefault();
       loadImage(event.dataTransfer.files[0]);
