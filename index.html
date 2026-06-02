@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>HalftoneLab</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --page: #f5f5f7;
+      --surface: rgba(255, 255, 255, 0.78);
+      --surface-strong: #ffffff;
+      --surface-soft: #f2f2f4;
+      --text: #1d1d1f;
+      --secondary: #6e6e73;
+      --tertiary: #98989d;
+      --border: rgba(0, 0, 0, 0.1);
+      --border-strong: rgba(0, 0, 0, 0.16);
+      --blue: #007aff;
+      --blue-hover: #006ee6;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.12);
+      --radius-xl: 28px;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --sidebar-width: 342px;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 14% -8%, rgba(0, 122, 255, 0.13), transparent 34rem),
+        radial-gradient(circle at 92% 0%, rgba(255, 149, 0, 0.12), transparent 32rem),
+        var(--page);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app-shell {
+      width: min(1440px, 100%);
+      min-height: calc(100vh - 48px);
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      background: rgba(255, 255, 255, 0.56);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(26px);
+      -webkit-backdrop-filter: blur(26px);
+    }
+
+    .toolbar {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+    }
+
+    .app-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .app-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.48)),
+        #f2f2f4;
+      border: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding: 8px;
+      flex: 0 0 auto;
+    }
+
+    .app-icon span {
+      border-radius: 50%;
+      background: var(--text);
+      opacity: 0.84;
+    }
+
+    .title-copy {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: var(--secondary);
+      font-size: 0.86rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: rgba(245, 245, 247, 0.82);
+      padding: 18px;
+      overflow: auto;
+    }
+
+    .main {
+      padding: 18px;
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.36);
+    }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      padding: 13px 15px 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--secondary);
+      font-size: 0.78rem;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.055em;
+      font-weight: 700;
+    }
+
+    .control-list {
+      display: grid;
+    }
+
+    .control {
+      display: grid;
+      grid-template-columns: minmax(94px, 0.9fr) minmax(0, 1.1fr);
+      align-items: center;
+      gap: 12px;
+      min-height: 52px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .control:last-child {
+      border-bottom: none;
+    }
+
+    .control.full {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    label,
+    .label {
+      color: var(--text);
+      font-size: 0.91rem;
+      line-height: 1.25;
+      font-weight: 500;
+    }
+
+    .value-label {
+      color: var(--secondary);
+      font-size: 0.82rem;
+      font-variant-numeric: tabular-nums;
+      justify-self: end;
+    }
+
+    .range-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      color: var(--secondary);
+      font-size: 0.86rem;
+    }
+
+    input[type="file"]::file-selector-button {
+      border: 0;
+      border-radius: 999px;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 600;
+      padding: 8px 12px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    select,
+    input[type="color"] {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--text);
+      padding: 7px 10px;
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+
+    select:focus,
+    input[type="color"]:focus {
+      border-color: rgba(0, 122, 255, 0.65);
+      box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.13);
+      background: #fff;
+    }
+
+    input[type="color"] {
+      padding: 3px;
+      cursor: pointer;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+      cursor: pointer;
+    }
+
+    button,
+    .upload-btn {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      min-height: 36px;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      user-select: none;
+    }
+
+    button:hover,
+    .upload-btn:hover {
+      background: #fff;
+      border-color: var(--border-strong);
+      box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
+    }
+
+    button:active,
+    .upload-btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .primary-btn {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .primary-btn:hover {
+      border-color: var(--blue-hover);
+      background: var(--blue-hover);
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 42px;
+    }
+
+    .preview-title {
+      display: grid;
+      gap: 2px;
+    }
+
+    .preview-title strong {
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .preview-title span {
+      font-size: 0.84rem;
+      color: var(--secondary);
+    }
+
+    .preview-status {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid var(--border);
+      color: var(--secondary);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34c759;
+    }
+
+    .stage-card {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-xl);
+      background:
+        linear-gradient(45deg, rgba(0, 0, 0, 0.055) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(0, 0, 0, 0.055) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.055) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.055) 75%),
+        #d7d7dc;
+      background-size: 30px 30px;
+      background-position: 0 0, 0 15px, 15px -15px, -15px 0;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      padding: 18px;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      max-height: 100%;
+      aspect-ratio: 16 / 10;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: transparent;
+      border-radius: 18px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: transparent;
+      border-radius: 18px;
+      box-shadow: 0 12px 42px rgba(0, 0, 0, 0.16);
+    }
+
+    .overlay-message {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 22px;
+      pointer-events: none;
+      color: rgba(29, 29, 31, 0.42);
+      font-size: clamp(1.3rem, 3.2vw, 3.2rem);
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+      font-weight: 700;
+    }
+
+    .overlay-message.hidden {
+      display: none;
+    }
+
+    .status-bar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      padding-top: 2px;
+    }
+
+    .status-item {
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.62);
+      padding: 11px 12px;
+    }
+
+    .status-item span {
+      display: block;
+      color: var(--tertiary);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .status-item strong {
+      display: block;
+      color: var(--text);
+      font-size: 0.88rem;
+      line-height: 1.22;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 600;
+    }
+
+    .note {
+      margin: 0;
+      color: var(--secondary);
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 1080px) {
+      body {
+        padding: 14px;
+      }
+
+      .app-shell {
+        min-height: calc(100vh - 28px);
+        border-radius: 24px;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        overflow: visible;
+      }
+
+      .section {
+        margin-bottom: 0;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .toolbar {
+        height: auto;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .toolbar-actions {
+        justify-content: flex-start;
+      }
+
+      .sidebar {
+        grid-template-columns: 1fr;
+      }
+
+      .control {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .status-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .preview-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .preview-status {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="toolbar">
+      <div class="app-title">
+        <div class="app-icon" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <div class="title-copy">
+          <h1>HalftoneLab</h1>
+          <div class="subtitle">Image to print-style halftone converter</div>
+        </div>
+      </div>
+
+      <div class="toolbar-actions">
+        <label class="upload-btn" for="imageUpload">Choose Image</label>
+        <button id="randomizeBtn">Randomize</button>
+        <button id="exportBtn" class="primary-btn" disabled>Export PNG</button>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <aside class="sidebar">
+        <section class="section">
+          <div class="section-title">Source</div>
+          <div class="control-list">
+            <div class="control full">
+              <input id="imageUpload" type="file" accept="image/*" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">Style</div>
+          <div class="control-list">
+            <div class="control">
+              <label for="mode">Mode</label>
+              <select id="mode">
+                <option value="cmykDots" selected>CMYK Dots</option>
+                <option value="monoDots">Mono Dots</option>
+                <option value="lineScreen">Line Screen</option>
+                <option value="bitmap">Hard Bitmap</option>
+              </select>
+            </div>
+
+            <div class="control">
+              <label for="fitMode">Fit</label>
+              <select id="fitMode">
+                <option value="contain">Contain</option>
+                <option value="cover">Cover</option>
+                <option value="stretch">Stretch</option>
+              </select>
+            </div>
+
+            <div class="control">
+              <label for="paperColor">Paper</label>
+              <input id="paperColor" type="color" value="#f8f3e7" />
+            </div>
+
+            <div class="control">
+              <label for="inkColor">Ink</label>
+              <input id="inkColor" type="color" value="#111111" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">Halftone</div>
+          <div class="control-list">
+            <div class="control full">
+              <div class="range-head">
+                <label for="spacing">Spacing</label>
+                <span class="value-label" id="spacingValue">12</span>
+              </div>
+              <input id="spacing" type="range" min="4" max="42" value="12" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="dotScale">Dot Size</label>
+                <span class="value-label"><span id="dotScaleValue">95</span>%</span>
+              </div>
+              <input id="dotScale" type="range" min="30" max="170" value="95" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="angle">Angle</label>
+                <span class="value-label"><span id="angleValue">15</span>°</span>
+              </div>
+              <input id="angle" type="range" min="-90" max="90" value="15" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="threshold">Threshold</label>
+                <span class="value-label" id="thresholdValue">128</span>
+              </div>
+              <input id="threshold" type="range" min="0" max="255" value="128" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="roughness">Roughness</label>
+                <span class="value-label"><span id="roughnessValue">45</span>%</span>
+              </div>
+              <input id="roughness" type="range" min="0" max="100" value="45" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="inkSpread">Ink Spread</label>
+                <span class="value-label"><span id="inkSpreadValue">28</span>%</span>
+              </div>
+              <input id="inkSpread" type="range" min="0" max="100" value="28" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="misregister">Misregister</label>
+                <span class="value-label"><span id="misregisterValue">3</span> px</span>
+              </div>
+              <input id="misregister" type="range" min="0" max="16" value="3" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="grain">Paper Grain</label>
+                <span class="value-label"><span id="grainValue">22</span>%</span>
+              </div>
+              <input id="grain" type="range" min="0" max="100" value="22" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">Image</div>
+          <div class="control-list">
+            <div class="control full">
+              <div class="range-head">
+                <label for="contrast">Contrast</label>
+                <span class="value-label"><span id="contrastValue">110</span>%</span>
+              </div>
+              <input id="contrast" type="range" min="40" max="220" value="110" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="brightness">Brightness</label>
+                <span class="value-label"><span id="brightnessValue">100</span>%</span>
+              </div>
+              <input id="brightness" type="range" min="40" max="180" value="100" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="imageScale">Scale</label>
+                <span class="value-label"><span id="imageScaleValue">100</span>%</span>
+              </div>
+              <input id="imageScale" type="range" min="25" max="250" value="100" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="offsetX">Position X</label>
+                <span class="value-label"><span id="offsetXValue">0</span>%</span>
+              </div>
+              <input id="offsetX" type="range" min="-100" max="100" value="0" />
+            </div>
+
+            <div class="control full">
+              <div class="range-head">
+                <label for="offsetY">Position Y</label>
+                <span class="value-label"><span id="offsetYValue">0</span>%</span>
+              </div>
+              <input id="offsetY" type="range" min="-100" max="100" value="0" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">Output</div>
+          <div class="control-list">
+            <div class="control">
+              <label for="outputSize">Size</label>
+              <select id="outputSize">
+                <option value="preview">Preview Size</option>
+                <option value="original">Original Image</option>
+                <option value="1080">1080 × 1080</option>
+                <option value="poster">1350 × 1920</option>
+                <option value="story">1080 × 1920</option>
+                <option value="landscape">1920 × 1080</option>
+              </select>
+            </div>
+            <div class="control full">
+              <button id="resetBtn">Reset Controls</button>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="main">
+        <div class="preview-header">
+          <div class="preview-title">
+            <strong>Preview</strong>
+            <span>Drag an image onto the canvas or choose a file.</span>
+          </div>
+          <div class="preview-status">
+            <span class="chip"><span class="chip-dot"></span>Local render</span>
+            <span class="chip">CMYK default</span>
+          </div>
+        </div>
+
+        <section class="stage-card">
+          <div class="stage" id="stage">
+            <canvas id="canvas"></canvas>
+            <div class="overlay-message" id="overlayMessage">Drop image here</div>
+          </div>
+        </section>
+
+        <section class="status-bar">
+          <div class="status-item">
+            <span>Status</span>
+            <strong id="status">No image loaded</strong>
+          </div>
+          <div class="status-item">
+            <span>Canvas</span>
+            <strong id="canvasInfo">Ready</strong>
+          </div>
+          <div class="status-item">
+            <span>Mode</span>
+            <strong id="modeInfo">CMYK Dots</strong>
+          </div>
+          <div class="status-item">
+            <span>Output</span>
+            <strong id="outputInfo">PNG</strong>
+          </div>
+        </section>
+
+        <p class="note">Roughness, ink spread, misregistration, and paper grain are kept, but the UI is back to the cleaner Apple-style layout.</p>
+      </main>
+    </section>
+  </main>
+
+  <script>
+    const imageUpload = document.getElementById("imageUpload");
+    const mode = document.getElementById("mode");
+    const fitMode = document.getElementById("fitMode");
+    const paperColor = document.getElementById("paperColor");
+    const inkColor = document.getElementById("inkColor");
+    const spacing = document.getElementById("spacing");
+    const dotScale = document.getElementById("dotScale");
+    const angle = document.getElementById("angle");
+    const threshold = document.getElementById("threshold");
+    const roughness = document.getElementById("roughness");
+    const inkSpread = document.getElementById("inkSpread");
+    const misregister = document.getElementById("misregister");
+    const grain = document.getElementById("grain");
+    const contrast = document.getElementById("contrast");
+    const brightness = document.getElementById("brightness");
+    const imageScale = document.getElementById("imageScale");
+    const offsetX = document.getElementById("offsetX");
+    const offsetY = document.getElementById("offsetY");
+    const outputSize = document.getElementById("outputSize");
+    const exportBtn = document.getElementById("exportBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const randomizeBtn = document.getElementById("randomizeBtn");
+    const stage = document.getElementById("stage");
+    const canvas = document.getElementById("canvas");
+    const overlayMessage = document.getElementById("overlayMessage");
+    const statusText = document.getElementById("status");
+    const canvasInfo = document.getElementById("canvasInfo");
+    const modeInfo = document.getElementById("modeInfo");
+    const outputInfo = document.getElementById("outputInfo");
+
+    const spacingValue = document.getElementById("spacingValue");
+    const dotScaleValue = document.getElementById("dotScaleValue");
+    const angleValue = document.getElementById("angleValue");
+    const thresholdValue = document.getElementById("thresholdValue");
+    const roughnessValue = document.getElementById("roughnessValue");
+    const inkSpreadValue = document.getElementById("inkSpreadValue");
+    const misregisterValue = document.getElementById("misregisterValue");
+    const grainValue = document.getElementById("grainValue");
+    const contrastValue = document.getElementById("contrastValue");
+    const brightnessValue = document.getElementById("brightnessValue");
+    const imageScaleValue = document.getElementById("imageScaleValue");
+    const offsetXValue = document.getElementById("offsetXValue");
+    const offsetYValue = document.getElementById("offsetYValue");
+
+    const ctx = canvas.getContext("2d");
+    const sourceCanvas = document.createElement("canvas");
+    const sourceCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
+
+    const image = new Image();
+    let currentObjectUrl = null;
+    let fileBaseName = "halftone";
+    let previewWidth = 0;
+    let previewHeight = 0;
+
+    function hexToRgb(hex) {
+      const value = hex.replace("#", "");
+      const bigint = parseInt(value, 16);
+      return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255
+      };
+    }
+
+    function rgbToString(rgb, alpha = 1) {
+      return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function rand2D(x, y, seed = 0) {
+      const t = Math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453123;
+      return t - Math.floor(t);
+    }
+
+    function updateLabels() {
+      spacingValue.textContent = spacing.value;
+      dotScaleValue.textContent = dotScale.value;
+      angleValue.textContent = angle.value;
+      thresholdValue.textContent = threshold.value;
+      roughnessValue.textContent = roughness.value;
+      inkSpreadValue.textContent = inkSpread.value;
+      misregisterValue.textContent = misregister.value;
+      grainValue.textContent = grain.value;
+      contrastValue.textContent = contrast.value;
+      brightnessValue.textContent = brightness.value;
+      imageScaleValue.textContent = imageScale.value;
+      offsetXValue.textContent = offsetX.value;
+      offsetYValue.textContent = offsetY.value;
+      modeInfo.textContent = mode.options[mode.selectedIndex].text;
+      outputInfo.textContent = outputSize.options[outputSize.selectedIndex].text;
+    }
+
+    function getOutputDimensions() {
+      if (outputSize.value === "original" && image.naturalWidth) {
+        return { width: image.naturalWidth, height: image.naturalHeight };
+      }
+      if (outputSize.value === "1080") return { width: 1080, height: 1080 };
+      if (outputSize.value === "poster") return { width: 1350, height: 1920 };
+      if (outputSize.value === "story") return { width: 1080, height: 1920 };
+      if (outputSize.value === "landscape") return { width: 1920, height: 1080 };
+      return { width: previewWidth, height: previewHeight };
+    }
+
+    function setStageAspect() {
+      if (!image.naturalWidth || outputSize.value !== "preview") return;
+      stage.style.aspectRatio = `${image.naturalWidth} / ${image.naturalHeight}`;
+    }
+
+    function resizeCanvas() {
+      const rect = stage.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      previewWidth = Math.max(320, Math.round(rect.width * dpr));
+      previewHeight = Math.max(220, Math.round(rect.height * dpr));
+      canvas.width = previewWidth;
+      canvas.height = previewHeight;
+      canvasInfo.textContent = `${canvas.width} × ${canvas.height}`;
+      render();
+    }
+
+    function getDrawRect(targetWidth, targetHeight) {
+      const imgRatio = image.naturalWidth / image.naturalHeight;
+      const targetRatio = targetWidth / targetHeight;
+
+      let width = targetWidth;
+      let height = targetHeight;
+
+      if (fitMode.value === "contain") {
+        if (imgRatio > targetRatio) {
+          width = targetWidth;
+          height = targetWidth / imgRatio;
+        } else {
+          height = targetHeight;
+          width = targetHeight * imgRatio;
+        }
+      }
+
+      if (fitMode.value === "cover") {
+        if (imgRatio > targetRatio) {
+          height = targetHeight;
+          width = targetHeight * imgRatio;
+        } else {
+          width = targetWidth;
+          height = targetWidth / imgRatio;
+        }
+      }
+
+      const scale = Number(imageScale.value) / 100;
+      width *= scale;
+      height *= scale;
+
+      const moveX = Number(offsetX.value) / 100;
+      const moveY = Number(offsetY.value) / 100;
+
+      return {
+        x: (targetWidth - width) / 2 + moveX * targetWidth * 0.5,
+        y: (targetHeight - height) / 2 + moveY * targetHeight * 0.5,
+        width,
+        height
+      };
+    }
+
+    function prepareSource(width, height) {
+      sourceCanvas.width = width;
+      sourceCanvas.height = height;
+      sourceCtx.clearRect(0, 0, width, height);
+      sourceCtx.fillStyle = paperColor.value;
+      sourceCtx.fillRect(0, 0, width, height);
+
+      if (!image.naturalWidth) return null;
+
+      const rect = getDrawRect(width, height);
+      sourceCtx.filter = `brightness(${brightness.value}%) contrast(${contrast.value}%)`;
+      sourceCtx.drawImage(image, rect.x, rect.y, rect.width, rect.height);
+      sourceCtx.filter = "none";
+
+      return sourceCtx.getImageData(0, 0, width, height).data;
+    }
+
+    function brightnessAt(data, width, height, x, y) {
+      const ix = Math.round(x);
+      const iy = Math.round(y);
+
+      if (ix < 0 || ix >= width || iy < 0 || iy >= height) return 255;
+
+      const i = (iy * width + ix) * 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      return 0.299 * r + 0.587 * g + 0.114 * b;
+    }
+
+    function rgbAt(data, width, height, x, y) {
+      const ix = Math.round(x);
+      const iy = Math.round(y);
+
+      if (ix < 0 || ix >= width || iy < 0 || iy >= height) {
+        return { r: 255, g: 255, b: 255 };
+      }
+
+      const i = (iy * width + ix) * 4;
+      return {
+        r: data[i],
+        g: data[i + 1],
+        b: data[i + 2]
+      };
+    }
+
+    function rgbToCmyk(r, g, b) {
+      const rr = r / 255;
+      const gg = g / 255;
+      const bb = b / 255;
+      const k = 1 - Math.max(rr, gg, bb);
+
+      if (k >= 0.999) {
+        return { c: 0, m: 0, y: 0, k: 1 };
+      }
+
+      return {
+        c: (1 - rr - k) / (1 - k),
+        m: (1 - gg - k) / (1 - k),
+        y: (1 - bb - k) / (1 - k),
+        k
+      };
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = paperColor.value;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawRoughDot(x, y, radius, color, seed = 0) {
+      if (radius <= 0) return;
+
+      const rough = Number(roughness.value) / 100;
+      const spread = Number(inkSpread.value) / 100;
+      ctx.fillStyle = color;
+
+      if (radius < 1.2 || rough < 0.05) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const pointCount = clamp(Math.round(10 + radius * 1.2), 10, 22);
+        const jitterAmount = rough * 0.42;
+
+        ctx.beginPath();
+
+        for (let i = 0; i < pointCount; i++) {
+          const a = (i / pointCount) * Math.PI * 2;
+          const n = rand2D(i + seed * 1.3, seed * 4.7, 5);
+          const localRadius = radius * (1 + (n - 0.5) * jitterAmount * 2);
+          const px = x + Math.cos(a) * localRadius;
+          const py = y + Math.sin(a) * localRadius;
+
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      if (spread > 0 && radius > 1.3) {
+        const bleedCount = 1 + Math.floor(spread * 3);
+        for (let i = 0; i < bleedCount; i++) {
+          const a = rand2D(seed + i * 7.2, seed * 3.1, 11) * Math.PI * 2;
+          const dist = radius * (0.65 + rand2D(seed + i, seed + i * 2, 14) * 0.45);
+          const r2 = radius * (0.14 + spread * 0.18 + rand2D(seed + i * 3, seed, 17) * 0.08);
+          const px = x + Math.cos(a) * dist;
+          const py = y + Math.sin(a) * dist;
+
+          ctx.save();
+          ctx.globalAlpha = 0.08 + spread * 0.12;
+          ctx.beginPath();
+          ctx.arc(px, py, r2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+    }
+
+    function drawRoughRect(x, y, size, angleDeg, color, seed = 0) {
+      const rough = Number(roughness.value) / 100;
+      const spread = Number(inkSpread.value) / 100;
+      const half = size / 2;
+      const rad = angleDeg * Math.PI / 180;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rad);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+
+      const points = [
+        { x: -half, y: -half },
+        { x: half, y: -half },
+        { x: half, y: half },
+        { x: -half, y: half }
+      ];
+
+      points.forEach((p, i) => {
+        const jx = (rand2D(seed + i, seed * 5.4, 21) - 0.5) * size * 0.18 * rough;
+        const jy = (rand2D(seed + i * 4, seed * 2.9, 23) - 0.5) * size * 0.18 * rough;
+        if (i === 0) ctx.moveTo(p.x + jx, p.y + jy);
+        else ctx.lineTo(p.x + jx, p.y + jy);
+      });
+
+      ctx.closePath();
+      ctx.fill();
+
+      if (spread > 0) {
+        ctx.globalAlpha = 0.08 + spread * 0.1;
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function overlayPaperTexture() {
+      const amount = Number(grain.value) / 100;
+      if (amount <= 0) return;
+
+      const step = 6;
+      ctx.save();
+      ctx.globalCompositeOperation = "multiply";
+
+      for (let y = 0; y < canvas.height; y += step) {
+        for (let x = 0; x < canvas.width; x += step) {
+          const n = rand2D(x / step, y / step, 91);
+          const alpha = (n - 0.5) * 0.12 * amount;
+
+          if (alpha > 0) {
+            ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+          } else {
+            ctx.fillStyle = `rgba(255,255,255,${Math.abs(alpha)})`;
+          }
+
+          ctx.fillRect(x, y, step, step);
+        }
+      }
+
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalCompositeOperation = "multiply";
+      ctx.globalAlpha = 0.035 * amount;
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 1;
+
+      for (let i = 0; i < canvas.width * canvas.height / 28000; i++) {
+        const x = rand2D(i, 5, 131) * canvas.width;
+        const y = rand2D(i, 9, 133) * canvas.height;
+        const len = 2 + rand2D(i, 15, 137) * 8;
+        const ang = rand2D(i, 21, 139) * Math.PI * 2;
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.cos(ang) * len, y + Math.sin(ang) * len);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function renderRotatedGrid(drawCallback, gridAngle, channelOffsetX = 0, channelOffsetY = 0) {
+      const width = canvas.width;
+      const height = canvas.height;
+      const step = Number(spacing.value);
+      const rad = gridAngle * Math.PI / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      const cx = width / 2;
+      const cy = height / 2;
+      const diagonal = Math.sqrt(width * width + height * height);
+
+      for (let gy = -diagonal / 2; gy <= diagonal / 2; gy += step) {
+        for (let gx = -diagonal / 2; gx <= diagonal / 2; gx += step) {
+          const x = cx + gx * cos - gy * sin + channelOffsetX;
+          const y = cy + gx * sin + gy * cos + channelOffsetY;
+
+          if (x < -step || x > width + step || y < -step || y > height + step) continue;
+          drawCallback(x, y, cos, sin, step, gx, gy);
+        }
+      }
+    }
+
+    function renderMonoDots(data) {
+      const ink = hexToRgb(inkColor.value);
+      const scale = Number(dotScale.value) / 100;
+      const gridAngle = Number(angle.value);
+
+      renderRotatedGrid((x, y, cos, sin, step, gx, gy) => {
+        const b = brightnessAt(data, canvas.width, canvas.height, x, y);
+        const darkness = 1 - b / 255;
+        const radius = Math.max(0, (step * 0.52) * darkness * scale);
+        if (radius < 0.32) return;
+
+        const seed = Math.floor((gx + 10000) * 0.13 + (gy + 10000) * 0.17);
+        drawRoughDot(x, y, radius, rgbToString(ink), seed);
+      }, gridAngle);
+    }
+
+    function renderLineScreen(data) {
+      const ink = hexToRgb(inkColor.value);
+      const scale = Number(dotScale.value) / 100;
+      const gridAngle = Number(angle.value);
+      const rough = Number(roughness.value) / 100;
+
+      ctx.strokeStyle = rgbToString(ink);
+      ctx.lineCap = "round";
+
+      renderRotatedGrid((x, y, cos, sin, step, gx, gy) => {
+        const b = brightnessAt(data, canvas.width, canvas.height, x, y);
+        const darkness = 1 - b / 255;
+        const length = step * 1.25 * darkness * scale;
+        const lineWidth = Math.max(0.35, step * 0.17 * scale * darkness);
+
+        if (length < 0.5) return;
+
+        const seed = Math.floor((gx + 10000) * 0.19 + (gy + 10000) * 0.23);
+        const jx = (rand2D(seed, 2, 41) - 0.5) * step * 0.22 * rough;
+        const jy = (rand2D(seed, 3, 43) - 0.5) * step * 0.22 * rough;
+        const extraAngle = (rand2D(seed, 4, 47) - 0.5) * rough * 0.45;
+
+        const c = Math.cos(gridAngle * Math.PI / 180 + extraAngle);
+        const s = Math.sin(gridAngle * Math.PI / 180 + extraAngle);
+
+        ctx.lineWidth = lineWidth;
+        ctx.beginPath();
+        ctx.moveTo(x - c * length / 2 + jx, y - s * length / 2 + jy);
+        ctx.lineTo(x + c * length / 2 + jx, y + s * length / 2 + jy);
+        ctx.stroke();
+
+        const spread = Number(inkSpread.value) / 100;
+        if (spread > 0.05) {
+          ctx.save();
+          ctx.globalAlpha = 0.09 + spread * 0.1;
+          ctx.lineWidth = lineWidth * (1.15 + spread * 0.25);
+          ctx.beginPath();
+          ctx.moveTo(x - c * length / 2 + jx, y - s * length / 2 + jy);
+          ctx.lineTo(x + c * length / 2 + jx, y + s * length / 2 + jy);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }, gridAngle);
+    }
+
+    function renderBitmap(data) {
+      const ink = hexToRgb(inkColor.value);
+      const step = Number(spacing.value);
+      const scale = Number(dotScale.value) / 100;
+      const limit = Number(threshold.value);
+      const gridAngle = Number(angle.value);
+
+      renderRotatedGrid((x, y, cos, sin, cell, gx, gy) => {
+        const b = brightnessAt(data, canvas.width, canvas.height, x, y);
+        if (b > limit) return;
+
+        const size = step * 0.82 * scale;
+        const seed = Math.floor((gx + 10000) * 0.11 + (gy + 10000) * 0.29);
+        drawRoughRect(x, y, size, gridAngle, rgbToString(ink), seed);
+      }, gridAngle);
+    }
+
+    function drawCmykChannel(data, channel, color, gridAngle, offsetVector, seedOffset) {
+      const scale = Number(dotScale.value) / 100;
+      const shift = Number(misregister.value);
+      const offsetAmountX = offsetVector.x * shift;
+      const offsetAmountY = offsetVector.y * shift;
+
+      ctx.save();
+      ctx.globalCompositeOperation = "multiply";
+
+      renderRotatedGrid((x, y, cos, sin, step, gx, gy) => {
+        const rgb = rgbAt(data, canvas.width, canvas.height, x - offsetAmountX, y - offsetAmountY);
+        const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
+        const amount = cmyk[channel];
+        const radius = Math.max(0, (step * 0.5) * amount * scale);
+
+        if (radius < 0.32) return;
+
+        const seed = Math.floor((gx + 10000) * 0.09 + (gy + 10000) * 0.07 + seedOffset);
+        const localJitterX = (rand2D(seed, 7, 51) - 0.5) * Number(roughness.value) / 100 * 1.3;
+        const localJitterY = (rand2D(seed, 8, 53) - 0.5) * Number(roughness.value) / 100 * 1.3;
+
+        drawRoughDot(
+          x + offsetAmountX + localJitterX,
+          y + offsetAmountY + localJitterY,
+          radius,
+          color,
+          seed
+        );
+      }, gridAngle);
+
+      ctx.restore();
+    }
+
+    function renderCmykDots(data) {
+      const baseAngle = Number(angle.value);
+
+      drawCmykChannel(
+        data,
+        "c",
+        "rgba(0, 174, 239, 0.75)",
+        baseAngle + 15,
+        { x: -0.7, y: 0.35 },
+        101
+      );
+
+      drawCmykChannel(
+        data,
+        "m",
+        "rgba(236, 0, 140, 0.72)",
+        baseAngle + 75,
+        { x: 0.65, y: -0.3 },
+        203
+      );
+
+      drawCmykChannel(
+        data,
+        "y",
+        "rgba(255, 232, 0, 0.76)",
+        baseAngle,
+        { x: 0, y: 0.2 },
+        307
+      );
+
+      drawCmykChannel(
+        data,
+        "k",
+        "rgba(0, 0, 0, 0.88)",
+        baseAngle + 45,
+        { x: -0.2, y: -0.55 },
+        409
+      );
+    }
+
+    function render() {
+      updateLabels();
+      clearCanvas();
+
+      if (!image.naturalWidth) return;
+
+      const data = prepareSource(canvas.width, canvas.height);
+      if (!data) return;
+
+      clearCanvas();
+
+      if (mode.value === "monoDots") renderMonoDots(data);
+      if (mode.value === "lineScreen") renderLineScreen(data);
+      if (mode.value === "cmykDots") renderCmykDots(data);
+      if (mode.value === "bitmap") renderBitmap(data);
+
+      overlayPaperTexture();
+    }
+
+    function loadImage(file) {
+      if (!file || !file.type.startsWith("image/")) {
+        statusText.textContent = "Please choose an image file";
+        return;
+      }
+
+      if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+      currentObjectUrl = URL.createObjectURL(file);
+      fileBaseName = file.name.replace(/\.[^/.]+$/, "") || "halftone";
+
+      image.onload = () => {
+        overlayMessage.classList.add("hidden");
+        exportBtn.disabled = false;
+        statusText.textContent = file.name;
+        setStageAspect();
+        resizeCanvas();
+      };
+
+      image.src = currentObjectUrl;
+    }
+
+    function exportPng() {
+      if (!image.naturalWidth) return;
+
+      const oldWidth = canvas.width;
+      const oldHeight = canvas.height;
+      const dims = getOutputDimensions();
+
+      canvas.width = dims.width;
+      canvas.height = dims.height;
+      canvasInfo.textContent = `${canvas.width} × ${canvas.height}`;
+      render();
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${fileBaseName}-halftone.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        canvas.width = oldWidth;
+        canvas.height = oldHeight;
+        canvasInfo.textContent = `${canvas.width} × ${canvas.height}`;
+        render();
+      }, "image/png");
+    }
+
+    function resetControls() {
+      mode.value = "cmykDots";
+      fitMode.value = "contain";
+      paperColor.value = "#f8f3e7";
+      inkColor.value = "#111111";
+      spacing.value = 12;
+      dotScale.value = 95;
+      angle.value = 15;
+      threshold.value = 128;
+      roughness.value = 45;
+      inkSpread.value = 28;
+      misregister.value = 3;
+      grain.value = 22;
+      contrast.value = 110;
+      brightness.value = 100;
+      imageScale.value = 100;
+      offsetX.value = 0;
+      offsetY.value = 0;
+      outputSize.value = "preview";
+      render();
+    }
+
+    function randomizeLook() {
+      const modes = ["cmykDots", "cmykDots", "monoDots", "lineScreen", "bitmap"];
+      const papers = ["#f8f3e7", "#ffffff", "#efe7d6", "#e9e2d4", "#f3f0ea"];
+      const inks = ["#111111", "#1d1d1f", "#2a241f", "#001f3f", "#3a2d28"];
+
+      mode.value = modes[Math.floor(Math.random() * modes.length)];
+      paperColor.value = papers[Math.floor(Math.random() * papers.length)];
+      inkColor.value = inks[Math.floor(Math.random() * inks.length)];
+      spacing.value = Math.floor(7 + Math.random() * 20);
+      dotScale.value = Math.floor(75 + Math.random() * 60);
+      angle.value = Math.floor(-35 + Math.random() * 70);
+      threshold.value = Math.floor(90 + Math.random() * 90);
+      roughness.value = Math.floor(20 + Math.random() * 60);
+      inkSpread.value = Math.floor(8 + Math.random() * 55);
+      misregister.value = Math.floor(Math.random() * 8);
+      grain.value = Math.floor(8 + Math.random() * 45);
+      contrast.value = Math.floor(90 + Math.random() * 90);
+      brightness.value = Math.floor(85 + Math.random() * 35);
+      render();
+    }
+
+    imageUpload.addEventListener("change", (event) => loadImage(event.target.files[0]));
+    exportBtn.addEventListener("click", exportPng);
+    resetBtn.addEventListener("click", resetControls);
+    randomizeBtn.addEventListener("click", randomizeLook);
+
+    const liveControls = [
+      mode,
+      fitMode,
+      paperColor,
+      inkColor,
+      spacing,
+      dotScale,
+      angle,
+      threshold,
+      roughness,
+      inkSpread,
+      misregister,
+      grain,
+      contrast,
+      brightness,
+      imageScale,
+      offsetX,
+      offsetY,
+      outputSize
+    ];
+
+    liveControls.forEach((control) => {
+      control.addEventListener("input", render);
+      control.addEventListener("change", render);
+    });
+
+    stage.addEventListener("dragover", (event) => event.preventDefault());
+    stage.addEventListener("drop", (event) => {
+      event.preventDefault();
+      loadImage(event.dataTransfer.files[0]);
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+
+    updateLabels();
+    resizeCanvas();
+  </script>
+</body>
+</html>
