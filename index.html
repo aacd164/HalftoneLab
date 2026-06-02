@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>HalftoneLab</title>
+
   <style>
     * {
       box-sizing: border-box;
@@ -24,11 +23,12 @@
       --border-strong: rgba(0, 0, 0, 0.16);
       --blue: #007aff;
       --blue-hover: #006ee6;
+      --green: #34c759;
+      --orange: #ff9500;
       --shadow: 0 18px 60px rgba(0, 0, 0, 0.12);
       --radius-xl: 28px;
       --radius-lg: 18px;
-      --radius-md: 12px;
-      --sidebar-width: 342px;
+      --sidebar-width: 354px;
     }
 
     body {
@@ -52,7 +52,7 @@
     }
 
     .app-shell {
-      width: min(1440px, 100%);
+      width: min(1480px, 100%);
       min-height: calc(100vh - 48px);
       margin: 0 auto;
       display: grid;
@@ -67,7 +67,7 @@
     }
 
     .toolbar {
-      height: 76px;
+      min-height: 76px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -288,6 +288,7 @@
       cursor: pointer;
       transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
       user-select: none;
+      white-space: nowrap;
     }
 
     button:hover,
@@ -370,7 +371,7 @@
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: #34c759;
+      background: var(--green);
     }
 
     .stage-card {
@@ -475,7 +476,7 @@
       line-height: 1.35;
     }
 
-    @media (max-width: 1080px) {
+    @media (max-width: 1100px) {
       body {
         padding: 14px;
       }
@@ -538,6 +539,7 @@
     }
   </style>
 </head>
+
 <body>
   <main class="app-shell">
     <header class="toolbar">
@@ -555,6 +557,7 @@
 
       <div class="toolbar-actions">
         <label class="upload-btn" for="imageUpload">Choose Image</label>
+        <button id="beforeAfterBtn" disabled>Show Original</button>
         <button id="randomizeBtn">Randomize</button>
         <button id="exportBtn" class="primary-btn" disabled>Export PNG</button>
       </div>
@@ -572,12 +575,32 @@
         </section>
 
         <section class="section">
+          <div class="section-title">Preset</div>
+          <div class="control-list">
+            <div class="control">
+              <label for="preset">Look</label>
+              <select id="preset">
+                <option value="custom">Custom</option>
+                <option value="newsprint">Newsprint</option>
+                <option value="risograph">Risograph</option>
+                <option value="offsetPoster">Offset Poster</option>
+                <option value="punkZine">Punk Zine</option>
+                <option value="screenPrint">Screen Print</option>
+                <option value="coatedMagazine">Coated Magazine</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
           <div class="section-title">Style</div>
           <div class="control-list">
             <div class="control">
               <label for="mode">Mode</label>
               <select id="mode">
                 <option value="cmykDots" selected>CMYK Dots</option>
+                <option value="duotone">Duotone</option>
+                <option value="tritone">Tritone</option>
                 <option value="monoDots">Mono Dots</option>
                 <option value="lineScreen">Line Screen</option>
                 <option value="bitmap">Hard Bitmap</option>
@@ -601,6 +624,21 @@
             <div class="control">
               <label for="inkColor">Ink</label>
               <input id="inkColor" type="color" value="#111111" />
+            </div>
+
+            <div class="control">
+              <label for="toneOne">Tone 1</label>
+              <input id="toneOne" type="color" value="#0057ff" />
+            </div>
+
+            <div class="control">
+              <label for="toneTwo">Tone 2</label>
+              <input id="toneTwo" type="color" value="#ff2d55" />
+            </div>
+
+            <div class="control">
+              <label for="toneThree">Tone 3</label>
+              <input id="toneThree" type="color" value="#111111" />
             </div>
           </div>
         </section>
@@ -733,6 +771,7 @@
                 <option value="landscape">1920 × 1080</option>
               </select>
             </div>
+
             <div class="control full">
               <button id="resetBtn">Reset Controls</button>
             </div>
@@ -748,7 +787,7 @@
           </div>
           <div class="preview-status">
             <span class="chip"><span class="chip-dot"></span>Local render</span>
-            <span class="chip">CMYK default</span>
+            <span class="chip">CMYK, duotone, tritone</span>
           </div>
         </div>
 
@@ -773,22 +812,29 @@
             <strong id="modeInfo">CMYK Dots</strong>
           </div>
           <div class="status-item">
-            <span>Output</span>
-            <strong id="outputInfo">PNG</strong>
+            <span>Preset</span>
+            <strong id="presetInfo">Custom</strong>
           </div>
         </section>
 
-        <p class="note">Built by Aaron Dey.</p>
+        <p class="note">
+          New in this version: print presets, before/after toggle, duotone mode, tritone mode, and stronger CMYK preset workflows. SVG export is still better saved for a later pass because it needs a cleaner vector-specific export path.
+        </p>
       </main>
     </section>
   </main>
 
   <script>
     const imageUpload = document.getElementById("imageUpload");
+    const beforeAfterBtn = document.getElementById("beforeAfterBtn");
+    const preset = document.getElementById("preset");
     const mode = document.getElementById("mode");
     const fitMode = document.getElementById("fitMode");
     const paperColor = document.getElementById("paperColor");
     const inkColor = document.getElementById("inkColor");
+    const toneOne = document.getElementById("toneOne");
+    const toneTwo = document.getElementById("toneTwo");
+    const toneThree = document.getElementById("toneThree");
     const spacing = document.getElementById("spacing");
     const dotScale = document.getElementById("dotScale");
     const angle = document.getElementById("angle");
@@ -812,7 +858,7 @@
     const statusText = document.getElementById("status");
     const canvasInfo = document.getElementById("canvasInfo");
     const modeInfo = document.getElementById("modeInfo");
-    const outputInfo = document.getElementById("outputInfo");
+    const presetInfo = document.getElementById("presetInfo");
 
     const spacingValue = document.getElementById("spacingValue");
     const dotScaleValue = document.getElementById("dotScaleValue");
@@ -837,6 +883,118 @@
     let fileBaseName = "halftone";
     let previewWidth = 0;
     let previewHeight = 0;
+    let showingOriginal = false;
+
+    const presets = {
+      newsprint: {
+        mode: "cmykDots",
+        paperColor: "#ede6d2",
+        inkColor: "#171717",
+        toneOne: "#111111",
+        toneTwo: "#444444",
+        toneThree: "#111111",
+        spacing: 10,
+        dotScale: 88,
+        angle: 15,
+        threshold: 130,
+        roughness: 68,
+        inkSpread: 35,
+        misregister: 5,
+        grain: 54,
+        contrast: 135,
+        brightness: 98
+      },
+      risograph: {
+        mode: "duotone",
+        paperColor: "#fff7df",
+        inkColor: "#111111",
+        toneOne: "#ff4f8b",
+        toneTwo: "#0057ff",
+        toneThree: "#111111",
+        spacing: 13,
+        dotScale: 105,
+        angle: -20,
+        threshold: 118,
+        roughness: 58,
+        inkSpread: 42,
+        misregister: 7,
+        grain: 38,
+        contrast: 125,
+        brightness: 105
+      },
+      offsetPoster: {
+        mode: "cmykDots",
+        paperColor: "#f7f2e8",
+        inkColor: "#111111",
+        toneOne: "#0057ff",
+        toneTwo: "#ff2d55",
+        toneThree: "#111111",
+        spacing: 9,
+        dotScale: 96,
+        angle: 15,
+        threshold: 128,
+        roughness: 34,
+        inkSpread: 20,
+        misregister: 3,
+        grain: 18,
+        contrast: 118,
+        brightness: 100
+      },
+      punkZine: {
+        mode: "bitmap",
+        paperColor: "#f4ecd7",
+        inkColor: "#050505",
+        toneOne: "#050505",
+        toneTwo: "#ff003c",
+        toneThree: "#050505",
+        spacing: 7,
+        dotScale: 126,
+        angle: -8,
+        threshold: 150,
+        roughness: 88,
+        inkSpread: 52,
+        misregister: 0,
+        grain: 70,
+        contrast: 185,
+        brightness: 92
+      },
+      screenPrint: {
+        mode: "tritone",
+        paperColor: "#fbf7ed",
+        inkColor: "#111111",
+        toneOne: "#ff3b30",
+        toneTwo: "#007aff",
+        toneThree: "#111111",
+        spacing: 16,
+        dotScale: 112,
+        angle: 25,
+        threshold: 126,
+        roughness: 40,
+        inkSpread: 26,
+        misregister: 4,
+        grain: 26,
+        contrast: 132,
+        brightness: 100
+      },
+      coatedMagazine: {
+        mode: "cmykDots",
+        paperColor: "#ffffff",
+        inkColor: "#111111",
+        toneOne: "#0057ff",
+        toneTwo: "#ff2d55",
+        toneThree: "#111111",
+        spacing: 6,
+        dotScale: 82,
+        angle: 15,
+        threshold: 128,
+        roughness: 10,
+        inkSpread: 6,
+        misregister: 1,
+        grain: 4,
+        contrast: 108,
+        brightness: 104
+      }
+    };
 
     function hexToRgb(hex) {
       const value = hex.replace("#", "");
@@ -876,7 +1034,13 @@
       offsetXValue.textContent = offsetX.value;
       offsetYValue.textContent = offsetY.value;
       modeInfo.textContent = mode.options[mode.selectedIndex].text;
-      outputInfo.textContent = outputSize.options[outputSize.selectedIndex].text;
+      presetInfo.textContent = preset.options[preset.selectedIndex].text;
+      beforeAfterBtn.textContent = showingOriginal ? "Show Effect" : "Show Original";
+    }
+
+    function markCustom() {
+      preset.value = "custom";
+      updateLabels();
     }
 
     function getOutputDimensions() {
@@ -948,6 +1112,19 @@
       };
     }
 
+    function drawOriginal(width, height) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = paperColor.value;
+      ctx.fillRect(0, 0, width, height);
+
+      if (!image.naturalWidth) return;
+
+      const rect = getDrawRect(width, height);
+      ctx.filter = `brightness(${brightness.value}%) contrast(${contrast.value}%)`;
+      ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height);
+      ctx.filter = "none";
+    }
+
     function prepareSource(width, height) {
       sourceCanvas.width = width;
       sourceCanvas.height = height;
@@ -975,6 +1152,7 @@
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
+
       return 0.299 * r + 0.587 * g + 0.114 * b;
     }
 
@@ -987,6 +1165,7 @@
       }
 
       const i = (iy * width + ix) * 4;
+
       return {
         r: data[i],
         g: data[i + 1],
@@ -1052,6 +1231,7 @@
 
       if (spread > 0 && radius > 1.3) {
         const bleedCount = 1 + Math.floor(spread * 3);
+
         for (let i = 0; i < bleedCount; i++) {
           const a = rand2D(seed + i * 7.2, seed * 3.1, 11) * Math.PI * 2;
           const dist = radius * (0.65 + rand2D(seed + i, seed + i * 2, 14) * 0.45);
@@ -1091,6 +1271,7 @@
       points.forEach((p, i) => {
         const jx = (rand2D(seed + i, seed * 5.4, 21) - 0.5) * size * 0.18 * rough;
         const jy = (rand2D(seed + i * 4, seed * 2.9, 23) - 0.5) * size * 0.18 * rough;
+
         if (i === 0) ctx.moveTo(p.x + jx, p.y + jy);
         else ctx.lineTo(p.x + jx, p.y + jy);
       });
@@ -1111,6 +1292,7 @@
       if (amount <= 0) return;
 
       const step = 6;
+
       ctx.save();
       ctx.globalCompositeOperation = "multiply";
 
@@ -1169,6 +1351,7 @@
           const y = cy + gx * sin + gy * cos + channelOffsetY;
 
           if (x < -step || x > width + step || y < -step || y > height + step) continue;
+
           drawCallback(x, y, cos, sin, step, gx, gy);
         }
       }
@@ -1183,6 +1366,7 @@
         const b = brightnessAt(data, canvas.width, canvas.height, x, y);
         const darkness = 1 - b / 255;
         const radius = Math.max(0, (step * 0.52) * darkness * scale);
+
         if (radius < 0.32) return;
 
         const seed = Math.floor((gx + 10000) * 0.13 + (gy + 10000) * 0.17);
@@ -1222,6 +1406,7 @@
         ctx.stroke();
 
         const spread = Number(inkSpread.value) / 100;
+
         if (spread > 0.05) {
           ctx.save();
           ctx.globalAlpha = 0.09 + spread * 0.1;
@@ -1325,11 +1510,123 @@
       );
     }
 
+    function drawToneChannel(data, color, gridAngle, minB, maxB, offsetVector, seedOffset, useDarkness) {
+      const scale = Number(dotScale.value) / 100;
+      const shift = Number(misregister.value);
+      const offsetAmountX = offsetVector.x * shift;
+      const offsetAmountY = offsetVector.y * shift;
+
+      ctx.save();
+      ctx.globalCompositeOperation = "multiply";
+
+      renderRotatedGrid((x, y, cos, sin, step, gx, gy) => {
+        const b = brightnessAt(data, canvas.width, canvas.height, x - offsetAmountX, y - offsetAmountY);
+
+        if (b < minB || b > maxB) return;
+
+        let amount;
+
+        if (useDarkness) {
+          amount = 1 - b / 255;
+        } else {
+          const center = (minB + maxB) / 2;
+          const range = Math.max(1, (maxB - minB) / 2);
+          amount = 1 - Math.min(1, Math.abs(b - center) / range);
+        }
+
+        const radius = Math.max(0, step * 0.5 * amount * scale);
+
+        if (radius < 0.32) return;
+
+        const seed = Math.floor((gx + 10000) * 0.11 + (gy + 10000) * 0.13 + seedOffset);
+        drawRoughDot(x + offsetAmountX, y + offsetAmountY, radius, color, seed);
+      }, gridAngle);
+
+      ctx.restore();
+    }
+
+    function renderDuotone(data) {
+      const baseAngle = Number(angle.value);
+      const c1 = hexToRgb(toneOne.value);
+      const c2 = hexToRgb(toneTwo.value);
+
+      drawToneChannel(
+        data,
+        rgbToString(c1, 0.85),
+        baseAngle,
+        95,
+        255,
+        { x: -0.4, y: 0.25 },
+        501,
+        false
+      );
+
+      drawToneChannel(
+        data,
+        rgbToString(c2, 0.92),
+        baseAngle + 45,
+        0,
+        190,
+        { x: 0.55, y: -0.2 },
+        601,
+        true
+      );
+    }
+
+    function renderTritone(data) {
+      const baseAngle = Number(angle.value);
+      const c1 = hexToRgb(toneOne.value);
+      const c2 = hexToRgb(toneTwo.value);
+      const c3 = hexToRgb(toneThree.value);
+
+      drawToneChannel(
+        data,
+        rgbToString(c1, 0.8),
+        baseAngle - 25,
+        150,
+        255,
+        { x: -0.5, y: 0.25 },
+        701,
+        false
+      );
+
+      drawToneChannel(
+        data,
+        rgbToString(c2, 0.78),
+        baseAngle + 25,
+        70,
+        195,
+        { x: 0.45, y: -0.2 },
+        801,
+        false
+      );
+
+      drawToneChannel(
+        data,
+        rgbToString(c3, 0.9),
+        baseAngle + 60,
+        0,
+        135,
+        { x: 0.1, y: 0.5 },
+        901,
+        true
+      );
+    }
+
     function render() {
       updateLabels();
-      clearCanvas();
 
-      if (!image.naturalWidth) return;
+      if (!image.naturalWidth) {
+        clearCanvas();
+        return;
+      }
+
+      if (showingOriginal) {
+        drawOriginal(canvas.width, canvas.height);
+        return;
+      }
+
+      clearCanvas();
 
       const data = prepareSource(canvas.width, canvas.height);
       if (!data) return;
@@ -1340,6 +1637,8 @@
       if (mode.value === "lineScreen") renderLineScreen(data);
       if (mode.value === "cmykDots") renderCmykDots(data);
       if (mode.value === "bitmap") renderBitmap(data);
+      if (mode.value === "duotone") renderDuotone(data);
+      if (mode.value === "tritone") renderTritone(data);
 
       overlayPaperTexture();
     }
@@ -1357,6 +1656,7 @@
       image.onload = () => {
         overlayMessage.classList.add("hidden");
         exportBtn.disabled = false;
+        beforeAfterBtn.disabled = false;
         statusText.textContent = file.name;
         setStageAspect();
         resizeCanvas();
@@ -1370,8 +1670,10 @@
 
       const oldWidth = canvas.width;
       const oldHeight = canvas.height;
+      const wasShowingOriginal = showingOriginal;
       const dims = getOutputDimensions();
 
+      showingOriginal = false;
       canvas.width = dims.width;
       canvas.height = dims.height;
       canvasInfo.textContent = `${canvas.width} × ${canvas.height}`;
@@ -1390,6 +1692,7 @@
 
         setTimeout(() => URL.revokeObjectURL(url), 1000);
 
+        showingOriginal = wasShowingOriginal;
         canvas.width = oldWidth;
         canvas.height = oldHeight;
         canvasInfo.textContent = `${canvas.width} × ${canvas.height}`;
@@ -1397,11 +1700,43 @@
       }, "image/png");
     }
 
+    function applyPreset(name) {
+      if (!presets[name]) {
+        updateLabels();
+        return;
+      }
+
+      const p = presets[name];
+
+      mode.value = p.mode;
+      paperColor.value = p.paperColor;
+      inkColor.value = p.inkColor;
+      toneOne.value = p.toneOne;
+      toneTwo.value = p.toneTwo;
+      toneThree.value = p.toneThree;
+      spacing.value = p.spacing;
+      dotScale.value = p.dotScale;
+      angle.value = p.angle;
+      threshold.value = p.threshold;
+      roughness.value = p.roughness;
+      inkSpread.value = p.inkSpread;
+      misregister.value = p.misregister;
+      grain.value = p.grain;
+      contrast.value = p.contrast;
+      brightness.value = p.brightness;
+
+      render();
+    }
+
     function resetControls() {
+      preset.value = "custom";
       mode.value = "cmykDots";
       fitMode.value = "contain";
       paperColor.value = "#f8f3e7";
       inkColor.value = "#111111";
+      toneOne.value = "#0057ff";
+      toneTwo.value = "#ff2d55";
+      toneThree.value = "#111111";
       spacing.value = 12;
       dotScale.value = 95;
       angle.value = 15;
@@ -1416,40 +1751,47 @@
       offsetX.value = 0;
       offsetY.value = 0;
       outputSize.value = "preview";
+      showingOriginal = false;
       render();
     }
 
     function randomizeLook() {
-      const modes = ["cmykDots", "cmykDots", "monoDots", "lineScreen", "bitmap"];
-      const papers = ["#f8f3e7", "#ffffff", "#efe7d6", "#e9e2d4", "#f3f0ea"];
-      const inks = ["#111111", "#1d1d1f", "#2a241f", "#001f3f", "#3a2d28"];
+      const presetKeys = ["newsprint", "risograph", "offsetPoster", "punkZine", "screenPrint", "coatedMagazine"];
+      const randomPreset = presetKeys[Math.floor(Math.random() * presetKeys.length)];
+      preset.value = randomPreset;
+      applyPreset(randomPreset);
 
-      mode.value = modes[Math.floor(Math.random() * modes.length)];
-      paperColor.value = papers[Math.floor(Math.random() * papers.length)];
-      inkColor.value = inks[Math.floor(Math.random() * inks.length)];
-      spacing.value = Math.floor(7 + Math.random() * 20);
-      dotScale.value = Math.floor(75 + Math.random() * 60);
-      angle.value = Math.floor(-35 + Math.random() * 70);
-      threshold.value = Math.floor(90 + Math.random() * 90);
-      roughness.value = Math.floor(20 + Math.random() * 60);
-      inkSpread.value = Math.floor(8 + Math.random() * 55);
-      misregister.value = Math.floor(Math.random() * 8);
-      grain.value = Math.floor(8 + Math.random() * 45);
-      contrast.value = Math.floor(90 + Math.random() * 90);
-      brightness.value = Math.floor(85 + Math.random() * 35);
+      spacing.value = Math.max(4, Math.min(42, Number(spacing.value) + Math.floor(-2 + Math.random() * 5)));
+      dotScale.value = Math.max(30, Math.min(170, Number(dotScale.value) + Math.floor(-12 + Math.random() * 25)));
+      angle.value = Math.max(-90, Math.min(90, Number(angle.value) + Math.floor(-10 + Math.random() * 21)));
+      misregister.value = Math.max(0, Math.min(16, Number(misregister.value) + Math.floor(-2 + Math.random() * 5)));
       render();
     }
 
     imageUpload.addEventListener("change", (event) => loadImage(event.target.files[0]));
+
+    beforeAfterBtn.addEventListener("click", () => {
+      if (!image.naturalWidth) return;
+      showingOriginal = !showingOriginal;
+      render();
+    });
+
     exportBtn.addEventListener("click", exportPng);
     resetBtn.addEventListener("click", resetControls);
     randomizeBtn.addEventListener("click", randomizeLook);
+
+    preset.addEventListener("change", () => {
+      applyPreset(preset.value);
+    });
 
     const liveControls = [
       mode,
       fitMode,
       paperColor,
       inkColor,
+      toneOne,
+      toneTwo,
+      toneThree,
       spacing,
       dotScale,
       angle,
@@ -1467,11 +1809,18 @@
     ];
 
     liveControls.forEach((control) => {
-      control.addEventListener("input", render);
-      control.addEventListener("change", render);
+      control.addEventListener("input", () => {
+        if (control !== outputSize) markCustom();
+        render();
+      });
+      control.addEventListener("change", () => {
+        if (control !== outputSize) markCustom();
+        render();
+      });
     });
 
     stage.addEventListener("dragover", (event) => event.preventDefault());
+
     stage.addEventListener("drop", (event) => {
       event.preventDefault();
       loadImage(event.dataTransfer.files[0]);
