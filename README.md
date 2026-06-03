@@ -1,6 +1,7 @@
 HalftoneLab
 
 https://aacd164.github.io/HalftoneLab/
+https://www.aarondey.design/
 
 HalftoneLab is a browser-based image tool that converts uploaded images into print-inspired halftone graphics. It recreates images using dot screens, line screens, bitmap effects, and CMYK-style process colour patterns, with controls for paper texture, ink spread, misregistration, and rough printed edges.
 
