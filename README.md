@@ -3,40 +3,156 @@ HalftoneLab
 https://aacd164.github.io/HalftoneLab/
 https://www.aarondey.design/
 
-HalftoneLab is a browser-based image tool that converts uploaded images into print-inspired halftone graphics. It recreates images using dot screens, line screens, bitmap effects, and CMYK-style process colour patterns, with controls for paper texture, ink spread, misregistration, and rough printed edges.
+# HalftoneLab
 
-The project is built as a single-page web app using HTML, CSS, JavaScript, and the Canvas API. All image processing happens locally in the browser, so uploaded images are not sent to a server.
+A browser-based tool for creating print-inspired halftone graphics from any image.
 
-Features
-Upload or drag and drop an image
-Convert images into CMYK halftone dots
-Generate mono dot, line screen, and hard bitmap effects
-Adjust dot spacing, dot size, angle, and threshold
-Simulate rough printed dots
-Add ink spread and paper grain
-Add CMYK misregistration for a more realistic print effect
-Adjust brightness, contrast, scale, and image positioning
-Export the final result as a PNG
-Fully client-side processing
-Why This Project Exists
+Designed by Aaron Dey.
 
-HalftoneLab was created as an experimental design tool for generating print-style graphics directly in the browser. It is inspired by traditional printmaking, offset printing, screen printing, risograph textures, and CMYK process colour separation.
+Website: https://aarondey.design
 
-The goal is not to perfectly simulate commercial print production, but to create a fast and flexible visual tool for making expressive halftone artwork.
+---
 
-How It Works
+## Overview
 
-The app loads an uploaded image into an HTML canvas, samples brightness and colour data from the image, then redraws the image using procedural halftone marks.
+HalftoneLab transforms uploaded images into expressive print-style artwork using CMYK halftones, bitmap effects, line screens, grain simulation, ink spread, and print misregistration.
 
-In CMYK mode, the image is converted into cyan, magenta, yellow, and black channel values. Each channel is drawn with its own screen angle and slight offset, creating a printed registration effect.
+This version features a redesigned dark interface inspired by Xeroxizer, with a fixed preview canvas and independently scrolling control panel for a faster and more focused workflow.
 
-Roughness, grain, and ink spread are generated procedurally to make the dots feel less digital and more physical.
+All processing happens locally in the browser.
 
-Tech Stack
-HTML
-CSS
-JavaScript
-Canvas API
-Browser File API
+No images are uploaded to a server.
 
-No external libraries or frameworks are required.
+---
+
+## Features
+
+### Image Processing
+
+- Upload JPG, PNG, GIF, and WebP images
+- Drag-and-drop support
+- CMYK halftone generation
+- Monochrome dot screens
+- Line screen effects
+- Bitmap conversion
+- Duotone and tritone workflows
+- CMYK misregistration simulation
+- Ink spread controls
+- Rough edge simulation
+- Paper grain generation
+- Brightness and contrast adjustment
+- Scale and positioning controls
+
+### Workflow
+
+- Real-time preview
+- Before / After comparison slider
+- Fixed canvas workspace
+- Scrollable controls panel
+- Export final artwork as PNG
+- Fully client-side rendering
+
+### Interface
+
+- Xeroxizer-inspired dark mode
+- Apple-inspired visual hierarchy
+- Glassmorphism interface elements
+- Responsive layout
+- Keyboard and mouse friendly controls
+
+---
+
+## How To Use
+
+### 1. Open The App
+
+Open `index.html` in any modern browser.
+
+Recommended:
+
+- Chrome
+- Safari
+- Edge
+
+### 2. Upload An Image
+
+Click Upload or drag an image directly into the application.
+
+### 3. Adjust Settings
+
+Experiment with:
+
+- Dot Size
+- Dot Spacing
+- Screen Angle
+- Ink Spread
+- Roughness
+- Grain
+- Misregistration
+- Brightness
+- Contrast
+
+### 4. Compare Results
+
+Drag the split-view slider to compare the original image against the processed output.
+
+### 5. Export
+
+Click **Export PNG** to save the final artwork.
+
+---
+
+## Technical Information
+
+HalftoneLab is built using:
+
+- HTML5
+- CSS3
+- JavaScript
+- Canvas API
+
+No frameworks or external dependencies are required.
+
+All rendering is performed directly in the browser.
+
+---
+
+## Performance Notes
+
+For best performance:
+
+- Use images under 4000px on the longest side
+- Close unnecessary browser tabs
+- Use Chrome or Safari
+- Avoid extremely large TIFF files
+
+Future updates may include:
+
+- Web Workers
+- Offscreen Canvas rendering
+- GPU acceleration
+- Higher resolution export options
+
+---
+
+## Credits
+
+### Design & UI
+
+Aaron Dey
+
+https://aarondey.design
+
+### Original Project
+
+HalftoneLab
+
+https://aacd164.github.io/HalftoneLab/
+
+---
+
+## License
+
+MIT License
+
+Feel free to modify, remix, and build upon the project.
